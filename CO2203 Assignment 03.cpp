@@ -7,4 +7,6 @@
 int main()
 {
     std::cout << "Hello World!\n";
+    std::cout << "This is the third assignment of CO2203\n";
+    std::cout << "Cheran changed the code.\n";
 }
