@@ -239,33 +239,88 @@ public:
     }
 };
 
+void displayMenu() {
+    cout << "1. Schedule an Event\n";
+    cout << "2. Mark a Day Off\n";
+    cout << "3. Delete an Event\n";
+    cout << "4. View Day Schedule\n";
+    cout << "5. View Week Schedule\n";
+    cout << "6. View Month Schedule\n";
+    cout << "7. Exit\n";
+    cout << "Choose an option: ";
+}
+
 int main() {
     Calendar cal;
-    try {
-        cal.scheduleEvent(2, Event("Meeting A", Time(8, 0), Time(10, 0), "none"));
-        cal.scheduleEvent(2, Event("Meeting B", Time(13, 0), Time(14, 30), "none"));
-        cal.markDayOff(3);
-        cal.scheduleEvent(4, Event("Meeting C", Time(10, 0), Time(13, 0), "none"));
-        cal.scheduleEvent(6, Event("Meeting D", Time(9, 30), Time(12, 0), "none"));
-        cal.scheduleEvent(5, Event("Daily Meeting", Time(11, 0), Time(11, 30), "daily"));
-        cal.scheduleEvent(7, Event("Weekly Meeting", Time(14, 0), Time(15, 0), "weekly"));
+    int choice;
 
-        cout << "View Day 2 July 2024:\n";
-        cal.viewDay(2);
+    while (true) {
+        displayMenu();
+        cin >> choice;
 
-        cout << "View Week from 1 July 2024:\n";
-        cal.viewWeek(1);
+        if (choice == 7) {
+            break;
+        }
 
-        cout << "View Month of July 2024:\n";
-        cal.viewMonth();
+        int date, startDate;
+        string title, repeatType;
+        Time start, end;
 
-        cal.deleteEvent(2, "Meeting A");
+        try {
+            switch (choice) {
+            case 1:
+                cout << "Enter date (1-31): ";
+                cin >> date;
+                cout << "Enter title: ";
+                cin.ignore();
+                getline(cin, title);
+                cout << "Enter start time (hour minute): ";
+                cin >> start;
+                cout << "Enter end time (hour minute): ";
+                cin >> end;
+                cout << "Enter repeat type (none, daily, weekly): ";
+                cin >> repeatType;
+                cal.scheduleEvent(date, Event(title, start, end, repeatType));
+                break;
 
-        cout << "View Day 2 July 2024 after deleting Meeting A:\n";
-        cal.viewDay(2);
-    }
-    catch (const exception& e) {
-        cerr << e.what() << endl;
+            case 2:
+                cout << "Enter date (1-31) to mark as day off: ";
+                cin >> date;
+                cal.markDayOff(date);
+                break;
+
+            case 3:
+                cout << "Enter date (1-31): ";
+                cin >> date;
+                cout << "Enter title of event to delete: ";
+                cin.ignore();
+                getline(cin, title);
+                cal.deleteEvent(date, title);
+                break;
+
+            case 4:
+                cout << "Enter date (1-31): ";
+                cin >> date;
+                cal.viewDay(date);
+                break;
+
+            case 5:
+                cout << "Enter start date (1-25) of the week: ";
+                cin >> startDate;
+                cal.viewWeek(startDate);
+                break;
+
+            case 6:
+                cal.viewMonth();
+                break;
+
+            default:
+                cout << "Invalid option. Please try again.\n";
+            }
+        }
+        catch (const exception& e) {
+            cerr << e.what() << endl;
+        }
     }
 
     return 0;
