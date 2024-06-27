@@ -158,8 +158,7 @@ public:
         if (token == "off") {
             day.isDayOff = true;
             day.clearEvents();
-        }
-        else {
+        } else {
             Event event;
             ss.str(line);
             ss.clear();
@@ -243,8 +242,7 @@ public:
                 days[i].date = i;
                 days[i].addEvent(Event(event.title, event.start, event.end, "daily"));
             }
-        }
-        else if (event.repeatType == "weekly") {
+        } else if (event.repeatType == "weekly") {
             for (int i = startDate + 7; i <= 31; i += 7) {
                 days[i].date = i;
                 days[i].addEvent(Event(event.title, event.start, event.end, "weekly"));
@@ -276,8 +274,7 @@ public:
                 if (token == "off") {
                     days[date] = Day(date);
                     days[date].isDayOff = true;
-                }
-                else {
+                } else {
                     ss.clear();
                     ss.str(line);
                     ss >> date;
