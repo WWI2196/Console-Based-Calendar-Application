@@ -1,5 +1,10 @@
 1|A|10 30|12 30|weekly
+1|B|13 30|15 0|weekly
 8|A|10 30|12 30|weekly
+8|B|13 30|15 0|weekly
 15|A|10 30|12 30|weekly
+15|B|13 30|15 0|weekly
 22|A|10 30|12 30|weekly
+22|B|13 30|15 0|weekly
 29|A|10 30|12 30|weekly
+29|B|13 30|15 0|weekly
