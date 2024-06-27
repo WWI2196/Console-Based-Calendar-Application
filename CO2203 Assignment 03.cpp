@@ -187,6 +187,9 @@ public:
         if (date < 1 || date > 31) {
             throw invalid_argument("Date must be within July 2024");
         }
+        if (days[date].isDayOff) {
+            days[date].isDayOff = false; // Remove day off if it exists
+        }
         days[date].date = date;
         days[date].addEvent(event);
         handleRepeatingEvents(date, event);

@@ -1,5 +1,4 @@
-1|A|10 30|12 30|weekly
-1|B|13 30|15 0|weekly
+1|off|
 8|A|10 30|12 30|weekly
 8|B|13 30|15 0|weekly
 15|A|10 30|12 30|weekly
