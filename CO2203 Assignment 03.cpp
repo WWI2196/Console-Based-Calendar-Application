@@ -42,7 +42,9 @@ public:
     }
 
     friend istream& operator>>(istream& is, Time& time) {
-        is >> time.hour >> time.minute;
+        is >> time.hour;
+        is.ignore(1); // ignore space
+        is >> time.minute;
         return is;
     }
 };
@@ -70,14 +72,25 @@ public:
     }
 
     friend ostream& operator<<(ostream& os, const Event& event) {
-        os << event.title << "\n" << event.start << "\n" << event.end << "\n" << event.repeatType;
+        os << event.title << "|" << event.start << "|" << event.end << "|" << event.repeatType;
         return os;
     }
 
     friend istream& operator>>(istream& is, Event& event) {
-        is.ignore();
-        getline(is, event.title);
-        is >> event.start >> event.end >> event.repeatType;
+        string title, repeatType;
+        Time start, end;
+        getline(is, title, '|');
+        is >> start;
+        is.ignore(1); // ignore the '|'
+        is >> end;
+        is.ignore(1); // ignore the '|'
+        getline(is, repeatType);
+
+        event.title = title;
+        event.start = start;
+        event.end = end;
+        event.repeatType = repeatType;
+
         return is;
     }
 };
@@ -91,6 +104,9 @@ public:
     Day(int d = 0) : date(d), isDayOff(false) {}
 
     void addEvent(const Event& event) {
+        if (isDayOff) {
+            throw invalid_argument("Cannot schedule events on a day off");
+        }
         for (const auto& e : events) {
             if (event.overlaps(e)) {
                 throw invalid_argument("Event overlaps with an existing event");
@@ -103,6 +119,10 @@ public:
         events.erase(remove_if(events.begin(), events.end(),
             [&title](const Event& e) { return e.title == title; }),
             events.end());
+    }
+
+    void clearEvents() {
+        events.clear();
     }
 
     string toString() const {
@@ -118,20 +138,34 @@ public:
     }
 
     friend ostream& operator<<(ostream& os, const Day& day) {
-        os << day.date << " " << day.isDayOff << " " << day.events.size() << "\n";
+        if (day.isDayOff) {
+            os << day.date << "|off|\n";
+        }
         for (const auto& event : day.events) {
-            os << event << "\n";
+            os << day.date << "|" << event << "\n";
         }
         return os;
     }
 
     friend istream& operator>>(istream& is, Day& day) {
-        int eventsSize;
-        is >> day.date >> day.isDayOff >> eventsSize;
-        for (int i = 0; i < eventsSize; ++i) {
+        string line;
+        getline(is, line);
+        stringstream ss(line);
+        string token;
+        getline(ss, token, '|');
+        day.date = stoi(token);
+        getline(ss, token, '|');
+        if (token == "off") {
+            day.isDayOff = true;
+            day.clearEvents();
+        }
+        else {
             Event event;
-            is >> event;
-            day.events.push_back(event);
+            ss.str(line);
+            ss.clear();
+            ss >> event;
+            day.isDayOff = false;
+            day.addEvent(event);
         }
         return is;
     }
@@ -142,9 +176,6 @@ public:
     map<int, Day> days;
 
     Calendar() {
-        for (int i = 1; i <= 31; ++i) {
-            days[i] = Day(i);
-        }
         loadFromFile();
     }
 
@@ -156,9 +187,7 @@ public:
         if (date < 1 || date > 31) {
             throw invalid_argument("Date must be within July 2024");
         }
-        if (days[date].isDayOff) {
-            throw invalid_argument("Cannot schedule events on a day off");
-        }
+        days[date].date = date;
         days[date].addEvent(event);
         handleRepeatingEvents(date, event);
     }
@@ -167,7 +196,9 @@ public:
         if (date < 1 || date > 31) {
             throw invalid_argument("Date must be within July 2024");
         }
+        days[date].date = date;
         days[date].isDayOff = true;
+        days[date].clearEvents();
     }
 
     void deleteEvent(int date, const string& title) {
@@ -206,16 +237,14 @@ public:
     void handleRepeatingEvents(int startDate, const Event& event) {
         if (event.repeatType == "daily") {
             for (int i = startDate + 1; i <= 31; ++i) {
-                if (!days[i].isDayOff) {
-                    days[i].addEvent(Event(event.title, event.start, event.end, "daily"));
-                }
+                days[i].date = i;
+                days[i].addEvent(Event(event.title, event.start, event.end, "daily"));
             }
         }
         else if (event.repeatType == "weekly") {
             for (int i = startDate + 7; i <= 31; i += 7) {
-                if (!days[i].isDayOff) {
-                    days[i].addEvent(Event(event.title, event.start, event.end, "weekly"));
-                }
+                days[i].date = i;
+                days[i].addEvent(Event(event.title, event.start, event.end, "weekly"));
             }
         }
     }
@@ -231,9 +260,33 @@ public:
     void loadFromFile() {
         ifstream inFile("calendar_data.txt");
         if (inFile) {
-            Day day;
-            while (inFile >> day) {
-                days[day.date] = day;
+            string line;
+            while (getline(inFile, line)) {
+                if (line.empty()) continue;
+                stringstream ss(line);
+                int date;
+                ss >> date;
+                ss.ignore(1); // ignore the '|'
+
+                string token;
+                getline(ss, token, '|');
+                if (token == "off") {
+                    days[date] = Day(date);
+                    days[date].isDayOff = true;
+                }
+                else {
+                    ss.clear();
+                    ss.str(line);
+                    ss >> date;
+                    ss.ignore(1); // ignore the '|'
+
+                    Event event;
+                    ss >> event;
+                    if (days.find(date) == days.end()) {
+                        days[date] = Day(date);
+                    }
+                    days[date].addEvent(event);
+                }
             }
         }
     }
@@ -292,7 +345,7 @@ int main() {
             case 3:
                 cout << "Enter date (1-31): ";
                 cin >> date;
-                cout << "Enter title of event to delete: ";
+                cout << "Enter title of the event to delete: ";
                 cin.ignore();
                 getline(cin, title);
                 cal.deleteEvent(date, title);
