@@ -14,8 +14,11 @@ public:
     int hour;
     int minute;
 
-    Time(int h = 0, int m = 0) : hour(h), minute(m) {
-        if (h < 0 || h >= 24 || m < 0 || m >= 60 || (m % 30 != 0)) {
+    Time(int hour = 0, int minute = 0) {
+        this->hour = hour;
+        this->minute = minute;
+
+        if (hour < 0 || hour >= 24 || minute < 0 || minute >= 60 || (minute % 30 != 0)) {
             throw invalid_argument("Invalid time format");
         }
     }
