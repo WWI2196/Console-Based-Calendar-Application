@@ -1,5 +1,0 @@
-3|SLR|12 30|13 30|weekly
-10|SLR|12 30|13 30|weekly
-17|SLR|12 30|13 30|weekly
-24|SLR|12 30|13 30|weekly
-31|SLR|12 30|13 30|weekly

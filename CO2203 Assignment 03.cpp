@@ -148,6 +148,22 @@ public:
         }
     }
 
+    void shiftEvent(const string& title, int hourShift, int minuteShift) {
+        for (int i = 0; i < eventCount; ++i) {
+            if (events[i].title == title) {
+                Time newStart(events[i].start.hour + hourShift, events[i].start.minute + minuteShift);
+                Time newEnd(events[i].end.hour + hourShift, events[i].end.minute + minuteShift);
+
+                if (newEnd < newStart) {
+                    throw invalid_argument("Shift results in invalid event timing");
+                }
+
+                events[i].start = newStart;
+                events[i].end = newEnd;
+            }
+        }
+    }
+
     void clearEvents() {
         eventCount = 0;
     }
@@ -263,25 +279,32 @@ public:
         }
     }
 
-    void viewDay(int date) const {
+    void shiftEvent(int date, const string& title, int hourShift, int minuteShift) {
         if (date < currentDay || date > 31) {
             throw invalid_argument("Date must be within July 2024");
         }
-        cout << days[date - 1].toString() << endl;
+        days[date - 1].shiftEvent(title, hourShift, minuteShift);
+    }
+
+    void viewDay(int date) const {
+        if (date < 1 || date > 31) {
+            throw invalid_argument("Date must be within July 2024");
+        }
+        cout << days[date - 1].toString();
     }
 
     void viewWeek(int startDate) const {
-        if (startDate < currentDay || startDate > 25) {
-            throw invalid_argument("Start date must be within range");
+        if (startDate < 1 || startDate > 25) {
+            throw invalid_argument("Start date must be within the range 1-25");
         }
-        for (int i = startDate; i < startDate + 7; ++i) {
-            cout << days[i - 1].toString() << endl;
+        for (int i = startDate - 1; i < startDate + 6; ++i) {
+            cout << days[i].toString();
         }
     }
 
     void viewMonth() const {
-        for (int i = currentDay; i <= 31; ++i) {
-            cout << days[i - 1].toString() << endl;
+        for (int i = 0; i < 31; ++i) {
+            cout << days[i].toString();
         }
     }
 
@@ -290,12 +313,12 @@ private:
         string daysOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
         for (int i = 0; i < 31; ++i) {
             days[i].date = i + 1;
-            days[i].dayOfWeek = daysOfWeek[(i + 1) % 7];
+            days[i].dayOfWeek = daysOfWeek[i % 7];  // Adjusted to start from Monday
         }
     }
 
     void loadFromFile() {
-        ifstream file("events.txt");
+        ifstream file("calendar_data.txt");
         if (!file) return;
         string line;
         while (getline(file, line)) {
@@ -319,7 +342,7 @@ private:
     }
 
     void saveToFile() const {
-        ofstream file("calender_date.txt");
+        ofstream file("calendar_data.txt");
         for (int i = 0; i < 31; ++i) {
             file << days[i];
         }
@@ -350,16 +373,21 @@ private:
 };
 
 int main() {
-    Calendar calendar(1);
+    int currentDay;
+    cout << "Enter the current day of July 2024: ";
+    cin >> currentDay;
+
+    Calendar calendar(currentDay);
     char choice;
     do {
         cout << "1. Schedule an event\n";
         cout << "2. Mark a day off\n";
         cout << "3. Delete an event\n";
-        cout << "4. View a day\n";
-        cout << "5. View a week\n";
-        cout << "6. View the month\n";
-        cout << "7. Exit\n";
+        cout << "4. Shift an event\n";
+        cout << "5. View a day\n";
+        cout << "6. View a week\n";
+        cout << "7. View the month\n";
+        cout << "8. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
         switch (choice) {
@@ -399,31 +427,46 @@ int main() {
             break;
         }
         case '4': {
+            int date, hourShift, minuteShift;
+            string title;
+            cout << "Enter date (1-31): ";
+            cin >> date;
+            cout << "Enter title: ";
+            cin.ignore();
+            getline(cin, title);
+            cout << "Enter hour shift: ";
+            cin >> hourShift;
+            cout << "Enter minute shift: ";
+            cin >> minuteShift;
+            calendar.shiftEvent(date, title, hourShift, minuteShift);
+            break;
+        }
+        case '5': {
             int date;
             cout << "Enter date (1-31): ";
             cin >> date;
             calendar.viewDay(date);
             break;
         }
-        case '5': {
+        case '6': {
             int date;
             cout << "Enter start date (1-25): ";
             cin >> date;
             calendar.viewWeek(date);
             break;
         }
-        case '6': {
+        case '7': {
             calendar.viewMonth();
             break;
         }
-        case '7': {
+        case '8': {
             cout << "Exiting...\n";
             break;
         }
         default:
             cout << "Invalid choice. Please try again.\n";
         }
-    } while (choice != '7');
+    } while (choice != '8');
 
     return 0;
 }

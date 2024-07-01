@@ -1,0 +1,5 @@
+3|SL|10 30|12 30|weekly
+10|SL|10 30|12 30|weekly
+17|SL|10 30|12 30|weekly
+24|SL|10 30|12 30|weekly
+31|SL|10 30|12 30|weekly

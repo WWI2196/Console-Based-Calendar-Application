@@ -129,9 +129,6 @@
   <ItemGroup>
     <ClCompile Include="CO2203 Assignment 03.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="calendar_data.txt" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
