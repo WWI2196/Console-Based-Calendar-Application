@@ -261,15 +261,20 @@ public:
             if (days[date - 1].isDayOff) {
                 days[date - 1].isDayOff = false;
             }
-            days[date - 1].addEvent(event);
+
+            if (event.repeatType == "none") {
+                days[date - 1].addEvent(event);
+            }
+
+            
             if (event.repeatType == "daily") {
                 for (int i = date; i < 31; ++i) {
-                    days[i].addEvent(event);
+                    days[i-1].addEvent(event);
                 }
             }
             else if (event.repeatType == "weekly") {
-                for (int i = date; i < 31; i += 7) {
-                    days[i].addEvent(event);
+                for (int i = date; i <= 31; i= i+ 7) {
+                    days[i-1].addEvent(event);
                 }
             }
         }
