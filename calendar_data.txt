@@ -1,4 +1,0 @@
-4|off|
-11|A|8 0|10 0|weekly
-18|A|8 0|10 0|weekly
-25|A|8 0|10 0|weekly
