@@ -1,7 +1,8 @@
 4|SLYF|10:30|12:30|weekly
 4|YYY|12:41|13:41|weekly
 6|Q|08:00|09:00|none
-10|SLYF|10:30|12:30|weekly
+6|Q|14:00|15:00|none
+10|off|
 11|YYY|12:41|13:41|weekly
 18|YYY|12:41|13:41|weekly
 24|off|

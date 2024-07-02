@@ -269,17 +269,37 @@ public:
                 throw invalid_argument("Cannot schedule events in the past or beyond July 2024");
             }
 
-            string dayOfWeek = days[date - 1].dayOfWeek;
-            if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") {
+            if (days[date - 1].isDayOff) {
                 char confirmation;
-                cout << "The event is being scheduled on a " << dayOfWeek << ". Do you want to proceed? (y/n): ";
+                cout << "The selected day is marked as a day off. Do you want to proceed? (y/n): ";
                 cin >> confirmation;
                 if (confirmation != 'y' && confirmation != 'Y') {
                     return;
                 }
             }
 
-            days[date - 1].addEvent(event);
+            string dayOfWeek = days[date - 1].dayOfWeek;
+            Event newEvent = event;
+            newEvent.repeatType = event.repeatType;
+
+            if (event.repeatType == "daily") {
+                for (int i = date; i <= 31; ++i) {
+                    if (!days[i - 1].isDayOff) {
+                        days[i - 1].addEvent(newEvent);
+                    }
+                }
+            }
+            else if (event.repeatType == "weekly") {
+                for (int i = date; i <= 31; i += 7) {
+                    if (!days[i - 1].isDayOff) {
+                        days[i - 1].addEvent(newEvent);
+                    }
+                }
+            }
+            else {
+                days[date - 1].addEvent(newEvent);
+            }
+
             cout << "Event scheduled successfully.\n";
         }
         catch (const exception& e) {
@@ -493,7 +513,7 @@ int main() {
         else if (option == 5) {
             calendar.displayCalendar();
         }
-        else if (option == 6) {
+        /*else if (option == 6) {
             int day;
             cout << "Enter current day (1-31): ";
             cin >> day;
@@ -504,7 +524,7 @@ int main() {
             catch (const exception& e) {
                 cout << "Error: " << e.what() << endl;
             }
-        }
+        }*/
         else if (option == 7) {
             int day;
             cout << "Enter day (1-31): ";
