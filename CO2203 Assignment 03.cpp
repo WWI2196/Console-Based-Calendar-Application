@@ -275,6 +275,18 @@ public:
             if (date < currentDay || date > 31) {
                 throw invalid_argument("Cannot schedule events in the past or beyond July 2024");
             }
+
+            string dayOfWeek = days[date - 1].dayOfWeek;
+            if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") {
+                char confirmation;
+                cout << "The event is being scheduled on a " << dayOfWeek << ". Do you want to continue? (yes/no): ";
+                cin >> confirmation;
+                if (confirmation != 'yes' && confirmation != 'YES') {
+                    cout << "Event scheduling cancelled." << endl;
+                    return;
+                }
+            }
+
             if (days[date - 1].isDayOff) {
                 days[date - 1].isDayOff = false;
             }
