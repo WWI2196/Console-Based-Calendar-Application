@@ -179,12 +179,28 @@ public:
         eventCount = 0;
     }
 
+    void sortEvents() {
+        // Implementing a simple bubble sort to sort events by start time
+        for (int i = 0; i < eventCount - 1; ++i) {
+            for (int j = 0; j < eventCount - i - 1; ++j) {
+                if (events[j].start > events[j + 1].start) {
+                    Event temp = events[j];
+                    events[j] = events[j + 1];
+                    events[j + 1] = temp;
+                }
+            }
+        }
+    }
+
     string toString() const {
         if (eventCount == 0 && !isDayOff) return "";
 
         string result = to_string(date) + " July 2024 (" + dayOfWeek + ")";
         if (isDayOff) result += " (Day Off)";
         result += "\n";
+
+        // Sort the events by start time before printing
+        const_cast<Day*>(this)->sortEvents();
 
         for (int i = 0; i < eventCount; ++i) {
             result += "  " + events[i].toString() + "\n";
@@ -228,6 +244,7 @@ public:
         return is;
     }
 };
+
 
 class Calendar {
 public:
