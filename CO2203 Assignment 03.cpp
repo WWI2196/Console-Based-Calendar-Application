@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <cstdio>
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
@@ -119,38 +120,23 @@ public:
         events[eventCount++] = event;
     }
 
-    void deleteEvent(const string& title, bool deleteRepeats) {
+    void deleteEvent(const string& title) {
         bool eventFound = false;
-        if (deleteRepeats) {
-            for (int i = 0; i < eventCount; ) {
-                if (events[i].title == title) {
-                    eventFound = true;
-                    for (int j = i; j < eventCount - 1; ++j) {
-                        events[j] = events[j + 1];
-                    }
-                    --eventCount;
+        for (int i = 0; i < eventCount; ++i) {
+            if (events[i].title == title) {
+                eventFound = true;
+                for (int j = i; j < eventCount - 1; ++j) {
+                    events[j] = events[j + 1];
                 }
-                else {
-                    ++i;
-                }
-            }
-        }
-        else {
-            for (int i = 0; i < eventCount; ++i) {
-                if (events[i].title == title) {
-                    eventFound = true;
-                    for (int j = i; j < eventCount - 1; ++j) {
-                        events[j] = events[j + 1];
-                    }
-                    --eventCount;
-                    break;
-                }
+                --eventCount;
+                break;
             }
         }
         if (!eventFound) {
             throw invalid_argument("No such event exists");
         }
     }
+
 
     void shiftEvent(const string& title, int newDate, Day* days) {
         bool eventFound = false;
@@ -164,7 +150,7 @@ public:
                     }
                 }
                 // Remove the event from the current date
-                deleteEvent(title, false);
+                deleteEvent(title);
                 // Add the event to the new date
                 days[newDate - 1].addEvent(eventToShift);
                 eventFound = true;
@@ -316,19 +302,40 @@ public:
             cout << "Error: " << e.what() << endl;
         }
     }
-
     void cancelEvent(int date, const string& title, bool deleteRepeats) {
         try {
             if (date < currentDay || date > 31) {
                 throw invalid_argument("Cannot cancel events in the past or beyond July 2024");
             }
-            days[date - 1].deleteEvent(title, deleteRepeats);
+       
+            // If deleteRepeats is true, delete all occurrences of the event in the future
+            if (!deleteRepeats) {
+                for (int i = date - 1; i < 31; ++i) {
+                    bool eventFound = true;
+                    while (eventFound) {
+                        eventFound = false;
+                        for (int j = 0; j < days[i].eventCount; ++j) {
+                            if (days[i].events[j].title == title) {
+                                days[i].deleteEvent(title);
+                                eventFound = true; // Continue to check for more instances of the event on this day
+                                break; // Exit the for loop to check the updated list
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                days[date - 1].deleteEvent(title);
+            }
+
             cout << "Event cancelled successfully.\n";
         }
         catch (const exception& e) {
             cout << "Error: " << e.what() << endl;
         }
     }
+
+
 
     void shiftEvent(int date, const string& title, int newDate) {
         try {
@@ -441,29 +448,27 @@ private:
 
 int main() {
 
-    string currentDay_s;
     int currentDay;
 
     while (true) {
 
         cout << "Enter the current day (1-31): ";
-        cin >> currentDay_s;
+        cin >> currentDay;
 
         try {
-            currentDay = stoi(currentDay_s);
 
-            if (currentDay >= 1 && currentDay <= 31) {
+            if (!cin.fail() || currentDay >= 1 && currentDay <= 31) {
                 break; // Valid input, break out of the loop
             }
             else {
-                std::cout << "Invalid input. Please enter a valid date.\n";
+                cout << "Invalid input. Please enter a valid date.\n";
             }
         }
         catch (invalid_argument& e) {
-            std::cout << "Invalid input. Please enter a valid date.\n";
+            cout << "Invalid input. Please enter a valid date.\n";
         }
         catch (out_of_range& e) {
-            std::cout << "The number entered is out of range.\n";
+            cout << "The number entered is out of range.\n";
         }
 
         // Clear input stream and ignore remaining characters
@@ -476,25 +481,67 @@ int main() {
 
     while (true) {
 
-        cout << "\n1. Schedule Event\n"
-            "2. Cancel Event\n"
-            "3. Shift Event\n"
-            "4. Set Day Off\n"
-            "5. Display Calendar\n"
-            "7. View Day Schedule\n"
-            "8. View Week Schedule\n"
-            "9. Exit\n"
-            "Choose an option: " ;
+        cout << "\n1. Schedule an Event\n"
+            "2. Cancel an Event\n"
+            "3. Shift an Event\n"
+            "4. Set a Day Off\n"
+            "5. View Day Schedule\n"
+            "6. View Week Schedule\n"
+            "7. View Month Schedule\n"
+            "8. Exit\n";
 
         int option;
+        cout << "\nChoose an option: ";
         cin >> option;
 
-        if (option == 1) {
+        if (option == 8) {
+            cout << "You have exited the program.\n";
+            break;
+        }
+		
+        while (true) {
+
+            try {
+
+                if (!cin.fail() || currentDay >= 1 && currentDay <= 8) {
+                    break; // Valid input, break out of the loop
+                }
+                else {
+                    cout << "Invalid input. Please enter a valid option.\n";
+                }
+            }
+            catch (invalid_argument& e) {
+                cout << "Invalid input. Please enter a valid option.\n";
+            }
+            catch (out_of_range& e) {
+                cout << "Please enter a valid option.\n";
+            }
+
+            // Clear input stream and ignore remaining characters
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+
+
+        switch (option) {
+        case 1: {
             int date, startHour, startMinute, endHour, endMinute;
             string title, repeatType;
 
-            cout << "Enter date (1-31): ";
-            cin >> date;
+            while (true) {
+                printf("Enter date (%d-31): ", currentDay);
+                cin >> date;
+
+                if (cin.fail() || date < currentDay || date > 31) {
+                    cin.clear(); // Clear the error flag
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
+                }
+                else {
+                    break;
+                }
+            }
+
             cout << "Enter event title: ";
             cin.ignore();
             getline(cin, title);
@@ -514,62 +561,98 @@ int main() {
             catch (const exception& e) {
                 cout << "Error: " << e.what() << endl;
             }
+            break;
         }
-        else if (option == 2) {
+        case 2: {
             int date;
             string title;
             char repeatChoice;
             bool deleteRepeats = false;
 
-            cout << "Enter date (1-31): ";
-            cin >> date;
+            while (true) {
+                cout << "Enter date (1-31): ";
+                cin >> date;
+
+                if (cin.fail() || date < currentDay || date > 31) {
+                    cin.clear(); // Clear the error flag
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
+                }
+                else {
+                    break;
+                }
+            }
+
             cout << "Enter event title: ";
             cin.ignore();
             getline(cin, title);
-            cout << "Delete all repeating events with the same title? (y/n): ";
+            cout << "Delete all repeating events with the same title? (y/n): "; // check this only for the repeating events
             cin >> repeatChoice;
-            deleteRepeats = (repeatChoice == 'y' || repeatChoice == 'Y');
+            deleteRepeats = (repeatChoice == 'yes' || repeatChoice == 'YES');
 
             calendar.cancelEvent(date, title, deleteRepeats);
+            break;
         }
-        else if (option == 3) {
+        case 3: {
             int date, newDate;
             string title;
 
-            cout << "Enter current date (1-31): ";
-            cin >> date;
+            while (true) {
+                printf("Enter date (%d-31): ", currentDay);
+                cin >> date;
+
+                if (cin.fail() || date < currentDay || date > 31) {
+                    cin.clear(); // Clear the error flag
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
+                }
+                else {
+                    break;
+                }
+            }
+
             cout << "Enter event title: ";
             cin.ignore();
             getline(cin, title);
-            cout << "Enter new date (1-31): ";
-            cin >> newDate;
+
+            while (true) {
+                printf("Enter new date (%d-31): ", currentDay);
+                cin >> newDate;
+
+                if (cin.fail() || date < currentDay || date > 31) {
+                    cin.clear(); // Clear the error flag
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
+                }
+                else {
+                    break;
+                }
+            }
 
             calendar.shiftEvent(date, title, newDate);
+            break;
         }
-        else if (option == 4) {
+        case 4: {
             int date;
 
-            cout << "Enter date (1-31): ";
-            cin >> date;
+            while (true) {
+                printf("Enter date (%d-31): ", currentDay);
+                cin >> date;
+
+                if (cin.fail() || date < currentDay || date > 31) {
+                    cin.clear(); // Clear the error flag
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
+                }
+                else {
+                    break;
+                }
+            }
 
             calendar.setDayOff(date);
+            break;
         }
-        else if (option == 5) {
-            calendar.displayCalendar();
-        }
-        /*else if (option == 6) {
-            int day;
-            cout << "Enter current day (1-31): ";
-            cin >> day;
-            try {
-                calendar.setCurrentDay(day);
-                cout << "Current day set to " << day << " July 2024.\n";
-            }
-            catch (const exception& e) {
-                cout << "Error: " << e.what() << endl;
-            }
-        }*/
-        else if (option == 7) {
+        case 5: {
             int day;
             cout << "Enter day (1-31): ";
             cin >> day;
@@ -579,8 +662,10 @@ int main() {
             catch (const exception& e) {
                 cout << "Error: " << e.what() << endl;
             }
+            break;
         }
-        else if (option == 8) {
+
+        case 6: {
             int startDay;
             cout << "Enter start day (1-31): ";
             cin >> startDay;
@@ -590,12 +675,13 @@ int main() {
             catch (const exception& e) {
                 cout << "Error: " << e.what() << endl;
             }
-        }
-        else if (option == 9) {
             break;
         }
-        else {
-            cout << "Invalid option. Please try again.\n";
+        case 7: {
+            calendar.displayCalendar();
+            break;
+        }
+
         }
     }
 
