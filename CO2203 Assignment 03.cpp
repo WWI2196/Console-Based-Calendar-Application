@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
+#include <limits>
 
 using namespace std;
 
@@ -21,15 +22,15 @@ public:
         }
     }
 
-    bool operator<(const Time& other) const {
+    bool isLessThan(const Time& other) const {
         return (hour < other.hour) || (hour == other.hour && minute < other.minute);
     }
 
-    bool operator>(const Time& other) const {
+    bool isGreaterThan(const Time& other) const {
         return (hour > other.hour) || (hour == other.hour && minute > other.minute);
     }
 
-    bool operator==(const Time& other) const {
+    bool isEqualTo(const Time& other) const {
         return hour == other.hour && minute == other.minute;
     }
 
@@ -37,18 +38,21 @@ public:
         return (hour < 10 ? "0" : "") + std::to_string(hour) + ":" + (minute < 10 ? "0" : "") + std::to_string(minute);
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Time& time) {
-        os << (time.hour < 10 ? "0" : "") << time.hour << ":" << (time.minute < 10 ? "0" : "") << time.minute;
-        return os;
-    }
-
-    friend std::istream& operator>>(std::istream& is, Time& time) {
+    void fromString(const std::string& timeStr) {
+        std::stringstream ss(timeStr);
         char delim;
-        is >> time.hour >> delim >> time.minute;
-        if (delim != ':' || time.hour < 0 || time.hour >= 24 || time.minute < 0 || time.minute >= 60) {
+        ss >> hour >> delim >> minute;
+        if (delim != ':' || hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
             throw std::invalid_argument("Invalid time format");
         }
-        return is;
+    }
+
+    std::string serialize() const {
+        return toString();
+    }
+
+    void deserialize(const std::string& timeStr) {
+        fromString(timeStr);
     }
 };
 
@@ -61,41 +65,32 @@ public:
 
     Event(std::string t = "", Time s = Time(), Time e = Time(), std::string r = "none")
         : title(t), start(s), end(e), repeatType(r) {
-        if (end < start) {
+        if (end.isLessThan(start)) {
             throw std::invalid_argument("Event end time must be after start time");
         }
     }
 
     bool overlaps(const Event& other) const {
-        return (start < other.end && end > other.start);
+        return (start.isLessThan(other.end) && end.isGreaterThan(other.start));
     }
 
     std::string toString() const {
         return title + " from " + start.toString() + " to " + end.toString() + " (" + repeatType + ")";
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Event& event) {
-        os << event.title << "|" << event.start << "|" << event.end << "|" << event.repeatType;
-        return os;
+    std::string serialize() const {
+        return title + "|" + start.serialize() + "|" + end.serialize() + "|" + repeatType;
     }
 
-    friend std::istream& operator>>(std::istream& is, Event& event) {
-        std::string title, repeatType;
-        Time start, end;
-        std::getline(is, title, '|');
-        if (title.empty()) return is;
-        event.title = title;
-        char delim;
-        is >> start >> delim >> end >> delim;
-        if (delim != '|') {
-            throw std::invalid_argument("Invalid event format");
-        }
-        std::getline(is, repeatType);
-        event.start = start;
-        event.end = end;
-        event.repeatType = repeatType;
-
-        return is;
+    void deserialize(const std::string& eventStr) {
+        std::stringstream ss(eventStr);
+        std::getline(ss, title, '|');
+        std::string startTimeStr, endTimeStr;
+        std::getline(ss, startTimeStr, '|');
+        std::getline(ss, endTimeStr, '|');
+        std::getline(ss, repeatType);
+        start.deserialize(startTimeStr);
+        end.deserialize(endTimeStr);
     }
 };
 
@@ -183,7 +178,7 @@ public:
         // Implementing a simple bubble sort to sort events by start time
         for (int i = 0; i < eventCount - 1; ++i) {
             for (int j = 0; j < eventCount - i - 1; ++j) {
-                if (events[j].start > events[j + 1].start) {
+                if (events[j].start.isGreaterThan(events[j + 1].start)) {
                     Event temp = events[j];
                     events[j] = events[j + 1];
                     events[j + 1] = temp;
@@ -209,42 +204,40 @@ public:
         return result;
     }
 
-    friend ostream& operator<<(ostream& os, const Day& day) {
-        if (day.isDayOff) {
-            os << day.date << "|off|\n";
+    std::string serialize() const {
+        std::string serializedDay;
+        if (isDayOff) {
+            serializedDay += std::to_string(date) + "|off|\n";
         }
-        for (int i = 0; i < day.eventCount; ++i) {
-            os << day.date << "|" << day.events[i] << "\n";
+        for (int i = 0; i < eventCount; ++i) {
+            serializedDay += std::to_string(date) + "|" + events[i].serialize() + "\n";
         }
-        return os;
+        return serializedDay;
     }
 
-    friend istream& operator>>(istream& is, Day& day) {
-        string line;
-        while (getline(is, line)) {
+    void deserialize(const std::string& dayStr) {
+        std::stringstream ss(dayStr);
+        std::string line;
+        while (std::getline(ss, line)) {
             if (line.empty()) continue;
-            stringstream ss(line);
-            string token;
-            getline(ss, token, '|');
-            day.date = stoi(token);
-            getline(ss, token, '|');
+            std::stringstream ssLine(line);
+            std::string token;
+            std::getline(ssLine, token, '|');
+            date = std::stoi(token);
+            std::getline(ssLine, token, '|');
             if (token == "off") {
-                day.isDayOff = true;
-                day.clearEvents();
+                isDayOff = true;
+                clearEvents();
             }
             else {
                 Event event;
-                ss.str(line);
-                ss.clear();
-                ss >> event;
-                day.isDayOff = false;
-                day.addEvent(event);
+                event.deserialize(line.substr(line.find('|') + 1));
+                isDayOff = false;
+                addEvent(event);
             }
         }
-        return is;
     }
 };
-
 
 class Calendar {
 public:
@@ -279,53 +272,28 @@ public:
             string dayOfWeek = days[date - 1].dayOfWeek;
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") {
                 char confirmation;
-                cout << "The event is being scheduled on a " << dayOfWeek << ". Do you want to continue? (yes/no): ";
+                cout << "The event is being scheduled on a " << dayOfWeek << ". Do you want to proceed? (y/n): ";
                 cin >> confirmation;
-                if (confirmation != 'yes' && confirmation != 'YES') {
-                    cout << "Event scheduling cancelled." << endl;
+                if (confirmation != 'y' && confirmation != 'Y') {
                     return;
                 }
             }
 
-            if (days[date - 1].isDayOff) {
-                days[date - 1].isDayOff = false;
-            }
-
-            if (event.repeatType == "none") {
-                days[date - 1].addEvent(event);
-            }
-
-            
-            if (event.repeatType == "daily") {
-                for (int i = date; i < 31; ++i) {
-                    days[i-1].addEvent(event);
-                }
-            }
-            else if (event.repeatType == "weekly") {
-                for (int i = date; i <= 31; i= i+ 7) {
-                    days[i-1].addEvent(event);
-                }
-            }
+            days[date - 1].addEvent(event);
+            cout << "Event scheduled successfully.\n";
         }
         catch (const exception& e) {
             cout << "Error: " << e.what() << endl;
         }
     }
 
-    void markDayOff(int date) {
-        if (date < currentDay || date > 31) {
-            throw invalid_argument("Cannot mark past days or beyond July 2024 as day off");
-        }
-        days[date - 1].isDayOff = true;
-        days[date - 1].clearEvents();
-    }
-
-    void deleteEvent(int date, const string& title) {
+    void cancelEvent(int date, const string& title, bool deleteRepeats) {
         try {
             if (date < currentDay || date > 31) {
-                throw invalid_argument("Cannot delete events in the past or beyond July 2024");
+                throw invalid_argument("Cannot cancel events in the past or beyond July 2024");
             }
-            days[date - 1].deleteEvent(title, false);
+            days[date - 1].deleteEvent(title, deleteRepeats);
+            cout << "Event cancelled successfully.\n";
         }
         catch (const exception& e) {
             cout << "Error: " << e.what() << endl;
@@ -335,40 +303,32 @@ public:
     void shiftEvent(int date, const string& title, int newDate) {
         try {
             if (date < currentDay || date > 31 || newDate < currentDay || newDate > 31) {
-                throw invalid_argument("Cannot shift events in the past or beyond July 2024");
+                throw invalid_argument("Invalid date for shifting events");
             }
             days[date - 1].shiftEvent(title, newDate, days);
+            cout << "Event shifted successfully.\n";
         }
         catch (const exception& e) {
             cout << "Error: " << e.what() << endl;
         }
     }
 
-    void displayDay(int date) const {
-        if (date < 1 || date > 31) {
-            cout << "Invalid date" << endl;
-            return;
-        }
-        string dayStr = days[date - 1].toString();
-        if (!dayStr.empty()) {
-            cout << dayStr << endl;
-        }
-    }
-
-    void displayWeek(int startDate) const {
-        if (startDate < 1 || startDate > 25) {
-            cout << "Invalid start date" << endl;
-            return;
-        }
-        for (int i = startDate; i < startDate + 7 && i <= 31; ++i) {
-            string dayStr = days[i - 1].toString();
-            if (!dayStr.empty()) {
-                cout << dayStr << endl;
+    void setDayOff(int date) {
+        try {
+            if (date < currentDay || date > 31) {
+                throw invalid_argument("Cannot set days off in the past or beyond July 2024");
             }
+            days[date - 1].isDayOff = true;
+            days[date - 1].clearEvents();
+            cout << "Day off set for " << date << " July 2024.\n";
+        }
+        catch (const exception& e) {
+            cout << "Error: " << e.what() << endl;
         }
     }
 
-    void displayMonth() const {
+    void displayCalendar() const {
+        cout << "July 2024 Calendar\n";
         for (int i = 0; i < 31; ++i) {
             string dayStr = days[i].toString();
             if (!dayStr.empty()) {
@@ -377,44 +337,75 @@ public:
         }
     }
 
-private:
-    void initializeDays() {
-        string dayOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-        for (int i = 0; i < 31; ++i) {
-            days[i] = Day(i + 1, dayOfWeek[i % 7]);  // July 1, 2024 is a Monday
+    void setCurrentDay(int day) {
+        if (day < 1 || day > 31) {
+            throw invalid_argument("Invalid day for setting current day");
+        }
+        currentDay = day;
+    }
+
+    void viewDaySchedule(int day) const {
+        if (day < 1 || day > 31) {
+            throw invalid_argument("Invalid day for viewing schedule");
+        }
+        cout << days[day - 1].toString() << endl;
+    }
+
+    void viewWeekSchedule(int startDay) const {
+        if (startDay < 1 || startDay > 31) {
+            throw invalid_argument("Invalid start day for viewing week schedule");
+        }
+        for (int i = startDay; i < startDay + 7 && i <= 31; ++i) {
+            cout << days[i - 1].toString() << endl;
         }
     }
 
-    void loadFromFile() {
-        ifstream file("calendar.txt");
- 
-        if (!file) return;
-        string line;
-        while (getline(file, line)) {
-            if (line.empty()) continue;
-            stringstream ss(line);
-            int date;
-            ss >> date;
-            ss.ignore(1); // ignore the '|'
-            if (line.find("|off|") != string::npos) {
-                days[date - 1].date = date;
-                days[date - 1].isDayOff = true;
-                days[date - 1].clearEvents();
-            }
-            else {
-                Event event;
-                ss >> event;
-                days[date - 1].addEvent(event);
-            }
+private:
+    void initializeDays() {
+        std::string dayOfWeek = "Monday";
+        for (int i = 0; i < 31; ++i) {
+            days[i] = Day(i + 1, dayOfWeek);
+
+            // Determine the next day of the week
+            if (dayOfWeek == "Monday") dayOfWeek = "Tuesday";
+            else if (dayOfWeek == "Tuesday") dayOfWeek = "Wednesday";
+            else if (dayOfWeek == "Wednesday") dayOfWeek = "Thursday";
+            else if (dayOfWeek == "Thursday") dayOfWeek = "Friday";
+            else if (dayOfWeek == "Friday") dayOfWeek = "Saturday";
+            else if (dayOfWeek == "Saturday") dayOfWeek = "Sunday";
+            else if (dayOfWeek == "Sunday") dayOfWeek = "Monday";
         }
-        file.close();
     }
 
     void saveToFile() const {
         ofstream file("calendar.txt");
-        for (int i = 0; i < 31; ++i) {
-            file << days[i];
+        if (!file.is_open()) {
+            throw runtime_error("Unable to open file for saving");
         }
+
+        for (int i = 0; i < 31; ++i) {
+            file << days[i].serialize();
+        }
+        file.close();
+    }
+
+    void loadFromFile() {
+        ifstream file("calendar.txt");
+        if (!file.is_open()) {
+            throw runtime_error("Unable to open file for loading");
+        }
+
+        string line;
+        while (getline(file, line)) {
+            if (line.empty()) continue;
+            int date;
+            stringstream ss(line);
+            string dateStr;
+            getline(ss, dateStr, '|');
+            date = stoi(dateStr);
+            days[date - 1].deserialize(line);
+        }
+        file.close();
     }
 };
 
@@ -428,113 +419,121 @@ int main() {
     }
 
     Calendar calendar(currentDay);
-    char choice;
-    do {
-        cout << "1. Schedule an event\n";
-        cout << "2. Mark a day off\n";
-        cout << "3. Delete an event\n";
-        cout << "4. Shift an event\n";
-        cout << "5. View a day\n";
-        cout << "6. View a week\n";
-        cout << "7. View the month\n";
-        cout << "8. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
-        switch (choice) {
-        case '1': {
-            int date, sh, sm, eh, em;
+
+    while (true) {
+        cout << "\n1. Schedule Event\n2. Cancel Event\n3. Shift Event\n4. Set Day Off\n5. Display Calendar\n6. Set Current Day\n7. View Day Schedule\n8. View Week Schedule\n9. Exit\nChoose an option: ";
+        int option;
+        cin >> option;
+
+        if (option == 1) {
+            int date, startHour, startMinute, endHour, endMinute;
             string title, repeatType;
+
             cout << "Enter date (1-31): ";
             cin >> date;
-            cout << "Enter title: ";
+            cout << "Enter event title: ";
             cin.ignore();
             getline(cin, title);
             cout << "Enter start time (HH MM): ";
-            cin >> sh >> sm;
+            cin >> startHour >> startMinute;
             cout << "Enter end time (HH MM): ";
-            cin >> eh >> em;
-            cout << "Enter repeat type (none/daily/weekly): ";
+            cin >> endHour >> endMinute;
+            cout << "Enter repeat type (none, daily, weekly): ";
             cin >> repeatType;
+
             try {
-                calendar.scheduleEvent(date, Event(title, Time(sh, sm), Time(eh, em), repeatType));
+                Time start(startHour, startMinute);
+                Time end(endHour, endMinute);
+                Event event(title, start, end, repeatType);
+                calendar.scheduleEvent(date, event);
             }
             catch (const exception& e) {
                 cout << "Error: " << e.what() << endl;
             }
-            break;
         }
-        case '2': {
-            int date;
-            cout << "Enter date (1-31): ";
-            cin >> date;
-            try {
-                calendar.markDayOff(date);
-            }
-            catch (const exception& e) {
-                cout << "Error: " << e.what() << endl;
-            }
-            break;
-        }
-        case '3': {
+        else if (option == 2) {
             int date;
             string title;
+            char repeatChoice;
+            bool deleteRepeats = false;
+
             cout << "Enter date (1-31): ";
             cin >> date;
-            cout << "Enter title: ";
+            cout << "Enter event title: ";
             cin.ignore();
             getline(cin, title);
-            try {
-                calendar.deleteEvent(date, title);
-            }
-            catch (const exception& e) {
-                cout << "Error: " << e.what() << endl;
-            }
-            break;
+            cout << "Delete all repeating events with the same title? (y/n): ";
+            cin >> repeatChoice;
+            deleteRepeats = (repeatChoice == 'y' || repeatChoice == 'Y');
+
+            calendar.cancelEvent(date, title, deleteRepeats);
         }
-        case '4': {
+        else if (option == 3) {
             int date, newDate;
             string title;
-            cout << "Enter date (1-31): ";
+
+            cout << "Enter current date (1-31): ";
             cin >> date;
-            cout << "Enter title: ";
+            cout << "Enter event title: ";
             cin.ignore();
             getline(cin, title);
             cout << "Enter new date (1-31): ";
             cin >> newDate;
+
+            calendar.shiftEvent(date, title, newDate);
+        }
+        else if (option == 4) {
+            int date;
+
+            cout << "Enter date (1-31): ";
+            cin >> date;
+
+            calendar.setDayOff(date);
+        }
+        else if (option == 5) {
+            calendar.displayCalendar();
+        }
+        else if (option == 6) {
+            int day;
+            cout << "Enter current day (1-31): ";
+            cin >> day;
             try {
-                calendar.shiftEvent(date, title, newDate);
+                calendar.setCurrentDay(day);
+                cout << "Current day set to " << day << " July 2024.\n";
             }
             catch (const exception& e) {
                 cout << "Error: " << e.what() << endl;
             }
+        }
+        else if (option == 7) {
+            int day;
+            cout << "Enter day (1-31): ";
+            cin >> day;
+            try {
+                calendar.viewDaySchedule(day);
+            }
+            catch (const exception& e) {
+                cout << "Error: " << e.what() << endl;
+            }
+        }
+        else if (option == 8) {
+            int startDay;
+            cout << "Enter start day (1-31): ";
+            cin >> startDay;
+            try {
+                calendar.viewWeekSchedule(startDay);
+            }
+            catch (const exception& e) {
+                cout << "Error: " << e.what() << endl;
+            }
+        }
+        else if (option == 9) {
             break;
         }
-        case '5': {
-            int date;
-            cout << "Enter date (1-31): ";
-            cin >> date;
-            calendar.displayDay(date);
-            break;
+        else {
+            cout << "Invalid option. Please try again.\n";
         }
-        case '6': {
-            int date;
-            cout << "Enter start date (1-25): ";
-            cin >> date;
-            calendar.displayWeek(date);
-            break;
-        }
-        case '7': {
-            calendar.displayMonth();
-            break;
-        }
-        case '8': {
-            cout << "Exiting...\n";
-            break;
-        }
-        default:
-            cout << "Invalid choice. Please try again.\n";
-        }
-    } while (choice != '8');
+    }
 
     return 0;
 }
