@@ -120,9 +120,11 @@ public:
     }
 
     void deleteEvent(const string& title, bool deleteRepeats) {
+        bool eventFound = false;
         if (deleteRepeats) {
             for (int i = 0; i < eventCount; ) {
                 if (events[i].title == title) {
+                    eventFound = true;
                     for (int j = i; j < eventCount - 1; ++j) {
                         events[j] = events[j + 1];
                     }
@@ -136,6 +138,7 @@ public:
         else {
             for (int i = 0; i < eventCount; ++i) {
                 if (events[i].title == title) {
+                    eventFound = true;
                     for (int j = i; j < eventCount - 1; ++j) {
                         events[j] = events[j + 1];
                     }
@@ -143,6 +146,9 @@ public:
                     break;
                 }
             }
+        }
+        if (!eventFound) {
+            throw invalid_argument("No such event exists");
         }
     }
 
@@ -276,6 +282,10 @@ public:
                 if (confirmation != 'y' && confirmation != 'Y') {
                     return;
                 }
+                else {
+                    days[date - 1].isDayOff = false;  // Remove the day off status
+                }
+    
             }
 
             string dayOfWeek = days[date - 1].dayOfWeek;
@@ -430,18 +440,52 @@ private:
 };
 
 int main() {
+
+    string currentDay_s;
     int currentDay;
-    cout << "Enter the current day of July 2024 (1-31): ";
-    while (!(cin >> currentDay) || currentDay < 1 || currentDay > 31) {
+
+    while (true) {
+
+        cout << "Enter the current day (1-31): ";
+        cin >> currentDay_s;
+
+        try {
+            currentDay = stoi(currentDay_s);
+
+            if (currentDay >= 1 && currentDay <= 31) {
+                break; // Valid input, break out of the loop
+            }
+            else {
+                std::cout << "Invalid input. Please enter a valid date.\n";
+            }
+        }
+        catch (invalid_argument& e) {
+            std::cout << "Invalid input. Please enter a valid date.\n";
+        }
+        catch (out_of_range& e) {
+            std::cout << "The number entered is out of range.\n";
+        }
+
+        // Clear input stream and ignore remaining characters
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Invalid input. Enter the current day of July 2024 (1-31): ";
     }
+
 
     Calendar calendar(currentDay);
 
     while (true) {
-        cout << "\n1. Schedule Event\n2. Cancel Event\n3. Shift Event\n4. Set Day Off\n5. Display Calendar\n6. Set Current Day\n7. View Day Schedule\n8. View Week Schedule\n9. Exit\nChoose an option: ";
+
+        cout << "\n1. Schedule Event\n"
+            "2. Cancel Event\n"
+            "3. Shift Event\n"
+            "4. Set Day Off\n"
+            "5. Display Calendar\n"
+            "7. View Day Schedule\n"
+            "8. View Week Schedule\n"
+            "9. Exit\n"
+            "Choose an option: " ;
+
         int option;
         cin >> option;
 
