@@ -352,16 +352,33 @@ private:
     void initializeDays() {
         string dayOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
         for (int i = 0; i < 31; ++i) {
-            days[i] = Day(i + 1, dayOfWeek[(i + 0) % 7]);  // July 1, 2024 is a Monday
+            days[i] = Day(i + 1, dayOfWeek[i % 7]);  // July 1, 2024 is a Monday
         }
     }
 
     void loadFromFile() {
         ifstream file("calendar.txt");
-        if (!file.is_open()) return;
-        for (int i = 0; i < 31; ++i) {
-            file >> days[i];
+ 
+        if (!file) return;
+        string line;
+        while (getline(file, line)) {
+            if (line.empty()) continue;
+            stringstream ss(line);
+            int date;
+            ss >> date;
+            ss.ignore(1); // ignore the '|'
+            if (line.find("|off|") != string::npos) {
+                days[date - 1].date = date;
+                days[date - 1].isDayOff = true;
+                days[date - 1].clearEvents();
+            }
+            else {
+                Event event;
+                ss >> event;
+                days[date - 1].addEvent(event);
+            }
         }
+        file.close();
     }
 
     void saveToFile() const {
