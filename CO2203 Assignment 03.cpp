@@ -399,18 +399,10 @@ public:
 
 private:
     void initializeDays() {
-        std::string dayOfWeek = "Monday";
-        for (int i = 0; i < 31; ++i) {
-            days[i] = Day(i + 1, dayOfWeek);
+        string daysOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
-            // Determine the next day of the week
-            if (dayOfWeek == "Monday") dayOfWeek = "Tuesday";
-            else if (dayOfWeek == "Tuesday") dayOfWeek = "Wednesday";
-            else if (dayOfWeek == "Wednesday") dayOfWeek = "Thursday";
-            else if (dayOfWeek == "Thursday") dayOfWeek = "Friday";
-            else if (dayOfWeek == "Friday") dayOfWeek = "Saturday";
-            else if (dayOfWeek == "Saturday") dayOfWeek = "Sunday";
-            else if (dayOfWeek == "Sunday") dayOfWeek = "Monday";
+        for (int i = 0; i < 31; ++i) {
+            days[i] = Day(i + 1, daysOfWeek[i % 7]);
         }
     }
 
