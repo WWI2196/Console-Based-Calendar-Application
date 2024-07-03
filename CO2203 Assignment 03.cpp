@@ -14,82 +14,119 @@ public:
     int hour;
     int minute;
 
-    Time(int hour = 0, int minute = 0) {
-        this->hour = hour;
-        this->minute = minute;
-
+    Time(int hour = 0, int minute = 0): hour(0), minute(0) {
         if (hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
-            throw std::invalid_argument("Invalid time format");
+            throw invalid_argument("Invalid time format");
         }
     }
-
-    bool isLessThan(const Time& other) const {
+    // -----------both  const
+    bool isLessThan( Time& other)  {
         return (hour < other.hour) || (hour == other.hour && minute < other.minute);
     }
-
-    bool isGreaterThan(const Time& other) const {
+    // -----------both const
+    bool isGreaterThan(Time& other)  {
         return (hour > other.hour) || (hour == other.hour && minute > other.minute);
     }
-
-    bool isEqualTo(const Time& other) const {
+    // ------------both const
+    bool isEqualTo( Time& other) {
         return hour == other.hour && minute == other.minute;
     }
-
-    std::string toString() const {
-        return (hour < 10 ? "0" : "") + std::to_string(hour) + ":" + (minute < 10 ? "0" : "") + std::to_string(minute);
+    // ------------both const
+    // ----------remove std
+    string toString() {
+        return (hour < 10 ? "0" : "") + to_string(hour) + ":" + (minute < 10 ? "0" : "") + to_string(minute);
     }
-
-    void fromString(const std::string& timeStr) {
-        std::stringstream ss(timeStr);
+    // --------- function const
+    // ---------string 
+    void fromString( string& timeStr) {
+        //--------remove std
+        stringstream ss(timeStr);
         char delim;
         ss >> hour >> delim >> minute;
         if (delim != ':' || hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
-            throw std::invalid_argument("Invalid time format");
+            throw invalid_argument("Invalid time format");
         }
     }
-
-    std::string serialize() const {
+    //-------remove std
+    string serialize() {
         return toString();
     }
-
-    void deserialize(const std::string& timeStr) {
+    //------------ function const
+    void deserialize(string& timeStr) {
         fromString(timeStr);
     }
 };
 
 class Event {
 public:
-    std::string title;
+    //-------remove std
+    string title;
     Time start;
     Time end;
-    std::string repeatType; // "none", "daily", "weekly"
+    //-- remove std;
+    string repeatType; // "none", "daily", "weekly"
 
-    Event(std::string t = "", Time s = Time(), Time e = Time(), std::string r = "none")
+
+    //-------remove std before both string
+    Event(string t = "", Time s = Time(), Time e = Time(), string r = "none")
         : title(t), start(s), end(e), repeatType(r) {
         if (end.isLessThan(start)) {
-            throw std::invalid_argument("Event end time must be after start time");
+            throw invalid_argument("Event end time must be after start time");
         }
     }
 
-    bool overlaps(const Event& other) const {
+    bool overlaps( Event& other)  {
         return (start.isLessThan(other.end) && end.isGreaterThan(other.start));
     }
 
-    std::string toString() const {
+    //---------remove std 
+    string toString() {
         return title + " from " + start.toString() + " to " + end.toString() + " (" + repeatType + ")";
     }
 
-    std::string serialize() const {
+    //-------remove std
+    string serialize() {
         return title + "|" + start.serialize() + "|" + end.serialize() + "|" + repeatType;
     }
-
-    void deserialize(const std::string& eventStr) {
-        std::stringstream ss(eventStr);
-        std::getline(ss, title, '|');
-        std::string startTimeStr, endTimeStr;
-        std::getline(ss, startTimeStr, '|');
-        std::getline(ss, endTimeStr, '|');
-        std::getline(ss, repeatType);
+    // ------------this function const cannot be deleted because if so it will give an error in the line.find('|'), the reason might be const is 
+    //-------------important call in the getline function
+    // ----------remove std from stringstream to last getline
+    void deserialize(const string& eventStr) {
+        //stringstream ss(eventStr);
+        //getline(ss, title, '|');
+        
+        int i = 0;
+        while (eventStr[i] != '|') {
+            title += eventStr[i];
+            i++;
+        }
+        string startTimeStr, endTimeStr;
+        //getline(ss, startTimeStr, '|');
+       // /*
+        int j = i + 1;
+        while (eventStr[j] != '|') {
+            startTimeStr += eventStr[j];
+            j++;
+        }
+        //*/
+        
+        //getline(ss, endTimeStr, '|');
+        ///*
+        int k = j + 1;
+        while (eventStr[k] != '|') {
+            endTimeStr += eventStr[k];
+            k++;
+        }
+       // */
+        
+       // getline(ss, repeatType);
+        ///*
+        int l = k + 1;
+        while (eventStr[l] != '\n') {
+            repeatType += eventStr[l];
+            l++;
+        }
+        //*/
         start.deserialize(startTimeStr);
         end.deserialize(endTimeStr);
     }
@@ -105,7 +142,7 @@ public:
 
     Day(int d = 0, string day = "") : date(d), isDayOff(false), dayOfWeek(day), eventCount(0) {}
 
-    void addEvent(const Event& event) {
+    void addEvent( Event& event) {
         if (isDayOff) {
             throw invalid_argument("Cannot schedule events on a day off");
         }
@@ -119,8 +156,8 @@ public:
         }
         events[eventCount++] = event;
     }
-
-    void deleteEvent(const string& title) {
+    //------------function const
+    void deleteEvent(string& title) {
         bool eventFound = false;
         for (int i = 0; i < eventCount; ++i) {
             if (events[i].title == title) {
@@ -137,8 +174,8 @@ public:
         }
     }
 
-
-    void shiftEvent(const string& title, int newDate, Day* days) {
+    //function const
+    void shiftEvent( string& title, int newDate, Day* days) {
         bool eventFound = false;
         for (int i = 0; i < eventCount; ++i) {
             if (events[i].title == title) {
@@ -178,8 +215,8 @@ public:
             }
         }
     }
-
-    string toString() const {
+    // ----------------- function cosnt
+    string toString() {
         if (eventCount == 0 && !isDayOff) return "";
 
         string result = to_string(date) + " July 2024 (" + dayOfWeek + ")";
@@ -195,28 +232,30 @@ public:
 
         return result;
     }
-
-    std::string serialize() const {
-        std::string serializedDay;
+    //---------------function const
+    //-----------removes std in both beginning strings std in both to string
+    string serialize() {
+        string serializedDay;
         if (isDayOff) {
-            serializedDay += std::to_string(date) + "|off|\n";
+            serializedDay += to_string(date) + "|off|\n";
         }
         for (int i = 0; i < eventCount; ++i) {
-            serializedDay += std::to_string(date) + "|" + events[i].serialize() + "\n";
+            serializedDay += to_string(date) + "|" + events[i].serialize() + "\n";
         }
         return serializedDay;
     }
-
-    void deserialize(const std::string& dayStr) {
-        std::stringstream ss(dayStr);
-        std::string line;
-        while (std::getline(ss, line)) {
+    //------------ according the previous big comment even i delete this const still the problem arises 
+    //-------------remove std from stringstream string getiline of all 
+    void deserialize(const string& dayStr) {
+        stringstream ss(dayStr);
+        string line;
+        while (getline(ss, line)) {
             if (line.empty()) continue;
-            std::stringstream ssLine(line);
-            std::string token;
-            std::getline(ssLine, token, '|');
-            date = std::stoi(token);
-            std::getline(ssLine, token, '|');
+            stringstream ssLine(line);
+            string token;
+            getline(ssLine, token, '|');
+            date = stoi(token);
+            getline(ssLine, token, '|');
             if (token == "off") {
                 isDayOff = true;
                 clearEvents();
@@ -254,8 +293,8 @@ public:
             cout << "Error saving to file: " << e.what() << endl;
         }
     }
-
-    void scheduleEvent(int date, const Event& event) {
+    //------------function event const
+    void scheduleEvent(int date,  Event& event) {
         try {
             if (date < currentDay || date > 31) {
                 throw invalid_argument("Cannot schedule events in the past or beyond July 2024");
@@ -302,14 +341,15 @@ public:
             cout << "Error: " << e.what() << endl;
         }
     }
-    void cancelEvent(int date, const string& title, bool deleteRepeats) {
+    //-----------function title const
+    void cancelEvent(int date, string& title, bool deleteRepeats) {
         try {
             if (date < currentDay || date > 31) {
                 throw invalid_argument("Cannot cancel events in the past or beyond July 2024");
             }
        
             // If deleteRepeats is true, delete all occurrences of the event in the future
-            if (!deleteRepeats) {
+            if (deleteRepeats) {                            
                 for (int i = date - 1; i < 31; ++i) {
                     bool eventFound = true;
                     while (eventFound) {
@@ -336,8 +376,8 @@ public:
     }
 
 
-
-    void shiftEvent(int date, const string& title, int newDate) {
+    //------------functon title const
+    void shiftEvent(int date,  string& title, int newDate) {
         try {
             if (date < currentDay || date > 31 || newDate < currentDay || newDate > 31) {
                 throw invalid_argument("Invalid date for shifting events");
@@ -363,8 +403,8 @@ public:
             cout << "Error: " << e.what() << endl;
         }
     }
-
-    void displayCalendar() const {
+    //----------------function const
+    void displayCalendar() {
         cout << "July 2024 Calendar\n";
         for (int i = 0; i < 31; ++i) {
             string dayStr = days[i].toString();
@@ -380,15 +420,15 @@ public:
         }
         currentDay = day;
     }
-
-    void viewDaySchedule(int day) const {
+    //---------------function const
+    void viewDaySchedule(int day) {
         if (day < 1 || day > 31) {
             throw invalid_argument("Invalid day for viewing schedule");
         }
         cout << days[day - 1].toString() << endl;
     }
-
-    void viewWeekSchedule(int startDay) const {
+    //---------------function const
+    void viewWeekSchedule(int startDay) {
         if (startDay < 1 || startDay > 31) {
             throw invalid_argument("Invalid start day for viewing week schedule");
         }
@@ -396,10 +436,10 @@ public:
             cout << days[i - 1].toString() << endl;
         }
     }
-
+    // std before string
 private:
     void initializeDays() {
-        std::string dayOfWeek = "Monday";
+        string dayOfWeek = "Monday";
         for (int i = 0; i < 31; ++i) {
             days[i] = Day(i + 1, dayOfWeek);
 
@@ -413,8 +453,8 @@ private:
             else if (dayOfWeek == "Sunday") dayOfWeek = "Monday";
         }
     }
-
-    void saveToFile() const {
+    //------------------function const
+    void saveToFile() {
         ofstream file("calendar.txt");
         if (!file.is_open()) {
             throw runtime_error("Unable to open file for saving");
@@ -431,14 +471,19 @@ private:
         if (!file.is_open()) {
             throw runtime_error("Unable to open file for loading");
         }
-
+        // set a while loop rather using second getline with input streams 
         string line;
         while (getline(file, line)) {
             if (line.empty()) continue;
             int date;
-            stringstream ss(line);
+            //stringstream ss(line);
             string dateStr;
-            getline(ss, dateStr, '|');
+            //getline(ss, dateStr, '|');
+            int i = 0;
+            while (line[i] != '|') {
+                dateStr += line[i];
+                i++;
+            }
             date = stoi(dateStr);
             days[date - 1].deserialize(line);
         }
@@ -530,7 +575,6 @@ int main() {
 
             while (true) {
                 printf("Enter date (%d-31): ", currentDay);
-                fflush(stdout);
                 cin >> date;
 
                 if (cin.fail() || date < currentDay || date > 31) {
@@ -589,7 +633,7 @@ int main() {
             getline(cin, title);
             cout << "Delete all repeating events with the same title? (y/n): "; // check this only for the repeating events
             cin >> repeatChoice;
-            deleteRepeats = (repeatChoice == 'yes' || repeatChoice == 'YES');
+            deleteRepeats = (repeatChoice == 'y' || repeatChoice == 'Y');
 
             calendar.cancelEvent(date, title, deleteRepeats);
             break;
@@ -600,7 +644,6 @@ int main() {
 
             while (true) {
                 printf("Enter date (%d-31): ", currentDay);
-                fflush(stdout);
                 cin >> date;
 
                 if (cin.fail() || date < currentDay || date > 31) {
@@ -619,7 +662,6 @@ int main() {
 
             while (true) {
                 printf("Enter new date (%d-31): ", currentDay);
-                fflush(stdout);
                 cin >> newDate;
 
                 if (cin.fail() || date < currentDay || date > 31) {
@@ -640,7 +682,6 @@ int main() {
 
             while (true) {
                 printf("Enter date (%d-31): ", currentDay);
-                fflush(stdout);
                 cin >> date;
 
                 if (cin.fail() || date < currentDay || date > 31) {
