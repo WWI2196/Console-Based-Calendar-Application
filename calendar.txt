@@ -1,5 +1,5 @@
-7|X|06:00|07:45|none
-7|QQT|13:45|14:50|weekly
+7|off|
+14|X|06:00|07:45|none
 14|QQT|13:45|14:50|weekly
 21|QQT|13:45|14:50|weekly
 28|QQT|13:45|14:50|weekly
