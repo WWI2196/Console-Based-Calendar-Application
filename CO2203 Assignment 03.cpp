@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
-
+#include <limits>
 
 using namespace std;
 
@@ -309,7 +309,7 @@ public:
             }
        
             // If deleteRepeats is true, delete all occurrences of the event in the future
-            if (deleteRepeats) {
+            if (!deleteRepeats) {
                 for (int i = date - 1; i < 31; ++i) {
                     bool eventFound = true;
                     while (eventFound) {
@@ -589,7 +589,7 @@ int main() {
             getline(cin, title);
             cout << "Delete all repeating events with the same title? (y/n): "; // check this only for the repeating events
             cin >> repeatChoice;
-            deleteRepeats = (repeatChoice == 'y' || repeatChoice == 'Y');
+            deleteRepeats = (repeatChoice == 'yes' || repeatChoice == 'YES');
 
             calendar.cancelEvent(date, title, deleteRepeats);
             break;
