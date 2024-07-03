@@ -271,7 +271,7 @@ public:
                 else {
                     days[date - 1].isDayOff = false;  // Remove the day off status
                 }
-    
+
             }
 
             string dayOfWeek = days[date - 1].dayOfWeek;
@@ -307,7 +307,7 @@ public:
             if (date < currentDay || date > 31) {
                 throw invalid_argument("Cannot cancel events in the past or beyond July 2024");
             }
-       
+
             // If deleteRepeats is true, delete all occurrences of the event in the future
             if (!deleteRepeats) {
                 for (int i = date - 1; i < 31; ++i) {
@@ -399,18 +399,10 @@ public:
 
 private:
     void initializeDays() {
-        std::string dayOfWeek = "Monday";
-        for (int i = 0; i < 31; ++i) {
-            days[i] = Day(i + 1, dayOfWeek);
+        string daysOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
-            // Determine the next day of the week
-            if (dayOfWeek == "Monday") dayOfWeek = "Tuesday";
-            else if (dayOfWeek == "Tuesday") dayOfWeek = "Wednesday";
-            else if (dayOfWeek == "Wednesday") dayOfWeek = "Thursday";
-            else if (dayOfWeek == "Thursday") dayOfWeek = "Friday";
-            else if (dayOfWeek == "Friday") dayOfWeek = "Saturday";
-            else if (dayOfWeek == "Saturday") dayOfWeek = "Sunday";
-            else if (dayOfWeek == "Sunday") dayOfWeek = "Monday";
+        for (int i = 0; i < 31; ++i) {
+            days[i] = Day(i + 1, daysOfWeek[i % 7]);
         }
     }
 
@@ -498,7 +490,7 @@ int main() {
             cout << "You have exited the program.\n";
             break;
         }
-		
+
         while (true) {
 
             try {
