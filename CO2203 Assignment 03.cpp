@@ -530,6 +530,7 @@ int main() {
 
             while (true) {
                 printf("Enter date (%d-31): ", currentDay);
+                fflush(stdout);
                 cin >> date;
 
                 if (cin.fail() || date < currentDay || date > 31) {
@@ -599,6 +600,7 @@ int main() {
 
             while (true) {
                 printf("Enter date (%d-31): ", currentDay);
+                fflush(stdout);
                 cin >> date;
 
                 if (cin.fail() || date < currentDay || date > 31) {
@@ -617,6 +619,7 @@ int main() {
 
             while (true) {
                 printf("Enter new date (%d-31): ", currentDay);
+                fflush(stdout);
                 cin >> newDate;
 
                 if (cin.fail() || date < currentDay || date > 31) {
@@ -637,6 +640,7 @@ int main() {
 
             while (true) {
                 printf("Enter date (%d-31): ", currentDay);
+                fflush(stdout);
                 cin >> date;
 
                 if (cin.fail() || date < currentDay || date > 31) {
