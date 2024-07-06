@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-
 #include <cstdio>
 #include <stdexcept>
 #include <fstream>
@@ -18,7 +17,7 @@ public:
         this->minute = minute;
 
         if (hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
-            throw std::invalid_argument("Invalid time format");
+            throw invalid_argument("Invalid time format");
         }
     }
 
@@ -34,39 +33,40 @@ public:
         return hour == other.hour && minute == other.minute;
     }
 
-    std::string toString() const {
-        return (hour < 10 ? "0" : "") + std::to_string(hour) + ":" + (minute < 10 ? "0" : "") + std::to_string(minute);
+    string toString() const {
+        return (hour < 10 ? "0" : "") + to_string(hour) + ":" + (minute < 10 ? "0" : "") + std::to_string(minute);
     }
 
-    void fromString(const std::string& timeStr) {
-        std::stringstream ss(timeStr);
+    void fromString(const string& timeStr) {
+        stringstream ss(timeStr);
         char delim;
         ss >> hour >> delim >> minute;
         if (delim != ':' || hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
-            throw std::invalid_argument("Invalid time format");
+            throw invalid_argument("Invalid time format");
         }
     }
 
-    std::string serialize() const {
+    string serialize() const {
         return toString();
     }
 
-    void deserialize(const std::string& timeStr) {
+    void deserialize(const string& timeStr) {
         fromString(timeStr);
     }
 };
 
 class Event {
 public:
-    std::string title;
+    string title;
     Time start;
     Time end;
-    std::string repeatType; // "none", "daily", "weekly"
+    string repeatType; // "none", "daily", "weekly"
 
-    Event(std::string t = "", Time s = Time(), Time e = Time(), std::string r = "none")
+    Event(string t = "", Time s = Time(), Time e = Time(), string r = "none")
         : title(t), start(s), end(e), repeatType(r) {
+
         if (end.isLessThan(start)) {
-            throw std::invalid_argument("Event end time must be after start time");
+            throw invalid_argument("Event end time must be after start time");
         }
     }
 
@@ -74,21 +74,21 @@ public:
         return (start.isLessThan(other.end) && end.isGreaterThan(other.start));
     }
 
-    std::string toString() const {
+    string toString() const {
         return title + " from " + start.toString() + " to " + end.toString() + " (" + repeatType + ")";
     }
 
-    std::string serialize() const {
+    string serialize() const {
         return title + "|" + start.serialize() + "|" + end.serialize() + "|" + repeatType;
     }
 
-    void deserialize(const std::string& eventStr) {
-        std::stringstream ss(eventStr);
-        std::getline(ss, title, '|');
-        std::string startTimeStr, endTimeStr;
-        std::getline(ss, startTimeStr, '|');
-        std::getline(ss, endTimeStr, '|');
-        std::getline(ss, repeatType);
+    void deserialize(const string& eventStr) {
+        stringstream ss(eventStr);
+        getline(ss, title, '|');
+        string startTimeStr, endTimeStr;
+        getline(ss, startTimeStr, '|');
+        getline(ss, endTimeStr, '|');
+        getline(ss, repeatType);
         start.deserialize(startTimeStr);
         end.deserialize(endTimeStr);
     }
@@ -195,27 +195,27 @@ public:
         return result;
     }
 
-    std::string serialize() const {
+    string serialize() const {
         std::string serializedDay;
         if (isDayOff) {
-            serializedDay += std::to_string(date) + "|off|\n";
+            serializedDay += to_string(date) + "|off|\n";
         }
         for (int i = 0; i < eventCount; ++i) {
-            serializedDay += std::to_string(date) + "|" + events[i].serialize() + "\n";
+            serializedDay += to_string(date) + "|" + events[i].serialize() + "\n";
         }
         return serializedDay;
     }
 
-    void deserialize(const std::string& dayStr) {
-        std::stringstream ss(dayStr);
-        std::string line;
-        while (std::getline(ss, line)) {
+    void deserialize(const string& dayStr) {
+        stringstream ss(dayStr);
+        string line;
+        while (getline(ss, line)) {
             if (line.empty()) continue;
-            std::stringstream ssLine(line);
-            std::string token;
-            std::getline(ssLine, token, '|');
-            date = std::stoi(token);
-            std::getline(ssLine, token, '|');
+            stringstream ssLine(line);
+            string token;
+            getline(ssLine, token, '|');
+            date = stoi(token);
+            getline(ssLine, token, '|');
             if (token == "off") {
                 isDayOff = true;
                 clearEvents();
