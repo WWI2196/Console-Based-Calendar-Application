@@ -187,6 +187,19 @@ public:
 };
 
 class Day {
+private:
+    void sortEvents() {
+        for (int i = 0; i < eventCount - 1; ++i) {
+            for (int j = 0; j < eventCount - i - 1; ++j) {
+                if (events[j].startTime.isGreaterThan(events[j + 1].startTime)) {
+                    Event temp = events[j];
+                    events[j] = events[j + 1];
+                    events[j + 1] = temp;
+                }
+            }
+        }
+    }
+
 public:
     int date;
     bool isDayOff;
@@ -214,6 +227,7 @@ public:
             throw EventExceptions(2);
         }
         events[eventCount++] = event;
+        sortEvents();
     }
 
     void deleteEvent(const string& title) {
@@ -262,18 +276,18 @@ public:
         eventCount = 0;
     }
 
-    void sortEvents() {
-        // Implementing a simple bubble sort to sort events by start time
-        for (int i = 0; i < eventCount - 1; ++i) {
-            for (int j = 0; j < eventCount - i - 1; ++j) {
-                if (events[j].startTime.isGreaterThan(events[j + 1].startTime)) {
-                    Event temp = events[j];
-                    events[j] = events[j + 1];
-                    events[j + 1] = temp;
-                }
-            }
-        }
-    }
+    //void sortEvents() {
+    //    // Implementing a simple bubble sort to sort events by start time
+    //    for (int i = 0; i < eventCount - 1; ++i) {
+    //        for (int j = 0; j < eventCount - i - 1; ++j) {
+    //            if (events[j].startTime.isGreaterThan(events[j + 1].startTime)) {
+    //                Event temp = events[j];
+    //                events[j] = events[j + 1];
+    //                events[j + 1] = temp;
+    //            }
+    //        }
+    //    }
+    //}
 
     string toString() const {
         if (eventCount == 0 && !isDayOff) return "";
@@ -286,7 +300,7 @@ public:
         result += "\n";
 
         // Sort the events by start time before printing
-        const_cast<Day*>(this)->sortEvents();
+        /*const_cast<Day*>(this)->sortEvents();*/
 
         for (int i = 0; i < eventCount; ++i) {
             result += "  " + events[i].toString() + "\n";
