@@ -508,7 +508,7 @@ private:
     }
 
     void saveToFile() const {
-        ofstream file("Scheduler.txt");
+        ofstream file("EventSaver.txt");
         if (!file.is_open()) {
             throw runtime_error("Unable to open file for saving");
         }
@@ -520,7 +520,7 @@ private:
     }
 
     void loadFromFile() {
-        ifstream file("Scheduler.txt");
+        ifstream file("EventSaver.txt");
         if (!file.is_open()) {
             throw runtime_error("Unable to open file for loading");
         }
