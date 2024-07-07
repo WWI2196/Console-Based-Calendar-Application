@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
+#include <limits> // for the numeric_limits of the streamsize in the ignore function
 
 using namespace std;
 
@@ -35,7 +36,7 @@ public:
             errorMessage = "Invalid time format";
             break;
         case 2:
-            
+            errorMessage = "";
             break;
         default:
             errorMessage = "Time error";
@@ -90,17 +91,46 @@ public:
         case 4:
             errorMessage = "Cannot schedule events in the past or beyond July 2024";
             break;
+        case 5:
+            errorMessage = "Invalid start day for viewing week schedule";
+            break;
         default:
             errorMessage = "Day error";
         }
     }
 };
 
-class Time {
+class SchedulerExceptions : public Exceptions {
 public:
+	SchedulerExceptions(int code) : Exceptions(code) {
+		switch (errorCode) {
+		case 1:
+			errorMessage = "Invalid input. Please enter a valid date.";
+			break;
+		case 2:
+			errorMessage = "The number entered is out of range.";
+			break;
+		case 3:
+			errorMessage = "Invalid input. Please enter a valid option.";
+			break;
+		case 4:
+			errorMessage = "Unable to open file for saving";
+			break;
+        case 5:
+            errorMessage = "Unable to open file for loading";
+			break;
+		default:
+			errorMessage = "Scheduler error";
+		}
+	}
+};
+
+class Time {
+private:
     int hour;
     int minute;
-
+public:
+    
     Time(int hour = 0, int minute = 0) {
         this->hour = hour;
         this->minute = minute;
@@ -123,7 +153,7 @@ public:
     }
 
     string toString() const {
-        return (hour < 10 ? "0" : "") + to_string(hour) + ":" + (minute < 10 ? "0" : "") + std::to_string(minute);
+        return (hour < 10 ? "0" : "") + to_string(hour) + ":" + (minute < 10 ? "0" : "") + to_string(minute);
     }
 
     void fromString(const string& timeStr) {
@@ -347,26 +377,71 @@ public:
 };
 
 class Scheduler {
-public:
+private:
     Day days[31];
     int currentDay;
+
+    void initializeDays() {
+        string daysOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+        for (int i = 0; i < 31; ++i) {
+            days[i] = Day(i + 1, daysOfWeek[i % 7]);
+        }
+    }
+
+    void saveEventsTo_txt() {
+        ofstream file("EventFile.txt");
+        if (!file.is_open()) {
+            throw SchedulerExceptions(4);
+        }
+
+        for (int i = 0; i < 31; ++i) {
+            file << days[i].serialize();
+        }
+        file.close();
+    }
+
+    void loadEventsFrom_txt() {
+        ifstream file("EventFile.txt");
+        if (!file.is_open()) {
+            throw SchedulerExceptions(5);
+        }
+
+        string line;
+        while (getline(file, line)) {
+            if (line.empty()) continue;
+            int date;
+            stringstream ss(line);
+            string dateStr;
+            getline(ss, dateStr, '|');
+            date = stoi(dateStr);
+            days[date - 1].deserialize(line);
+        }
+        file.close();
+
+        /*
+         * Referred from https://www.digitalocean.com/community/tutorials/getline-in-c-plus-plus
+         */
+    }
+
+public:
 
     Scheduler(int currentDay) : currentDay(currentDay) {
         try {
             initializeDays();
-            loadFromFile();
+            loadEventsFrom_txt();
         }
         catch (const exception& exception) {
-            cout << "Error during initialization: " << exception.what() << endl;
+            cout << "Error : " << exception.what() << endl;
         }
     }
 
     ~Scheduler() {
         try {
-            saveToFile();
+            saveEventsTo_txt();
         }
         catch (const exception& exception) {
-            cout << "Error saving to file: " << exception.what() << endl;
+            cout << "Error " << exception.what() << endl;
         }
     }
 
@@ -378,9 +453,9 @@ public:
 
             if (days[date - 1].isDayOff) {
                 char confirmation;
-                cout << "The selected day is marked as a day off. Do you want to proceed? (y/n): ";
+                cout << "The selected day is marked as a day off. Do you want to proceed? (yes/no): ";
                 cin >> confirmation;
-                if (confirmation != 'y' && confirmation != 'Y') {
+                if (confirmation != 'yes' && confirmation != 'YES') {
                     return;
                 }
                 else {
@@ -420,7 +495,7 @@ public:
     void cancelEvent(int date, const string& title, bool deleteRepeats) {
         try {
             if (date < currentDay || date > 31) {
-                throw invalid_argument("Cannot cancel events in the past or beyond July 2024");
+                throw DayExceptions(4);
             }
 
             // If deleteRepeats is true, delete all occurrences of the event in the future
@@ -445,8 +520,8 @@ public:
 
             cout << "Event cancelled successfully.\n";
         }
-        catch (const exception& e) {
-            cout << "Error: " << e.what() << endl;
+        catch (const exception& exception) {
+            cout << "Error: " << exception.what() << endl;
         }
     }
 
@@ -455,27 +530,27 @@ public:
     void shiftEvent(int date, const string& title, int newDate) {
         try {
             if (date < currentDay || date > 31 || newDate < currentDay || newDate > 31) {
-                throw invalid_argument("Invalid date for shifting events");
+                throw EventExceptions(5);
             }
             days[date - 1].shiftEvent(title, newDate, days);
             cout << "Event shifted successfully.\n";
         }
-        catch (const exception& e) {
-            cout << "Error: " << e.what() << endl;
+        catch (const exception& exception) {
+            cout << "Error: " << exception.what() << endl;
         }
     }
 
     void setDayOff(int date) {
         try {
             if (date < currentDay || date > 31) {
-                throw invalid_argument("Cannot set days off in the past or beyond July 2024");
+                throw DayExceptions(4);
             }
             days[date - 1].isDayOff = true;
             days[date - 1].clearEvents();
             cout << "Day off set for " << date << " July 2024.\n";
         }
-        catch (const exception& e) {
-            cout << "Error: " << e.what() << endl;
+        catch (const exception& exception) {
+            cout << "Error: " << exception.what() << endl;
         }
     }
 
@@ -489,72 +564,30 @@ public:
         }
     }
 
-    void setCurrentDay(int day) {
+    /*void setCurrentDay(int day) {
         if (day < 1 || day > 31) {
             throw invalid_argument("Invalid day for setting current day");
         }
         currentDay = day;
-    }
+    }*/
 
     void viewDaySchedule(int day) const {
         if (day < 1 || day > 31) {
-            throw invalid_argument("Invalid day for viewing schedule");
+            throw DayExceptions(3);
         }
         cout << days[day - 1].toString() << endl;
     }
 
     void viewWeekSchedule(int startDay) const {
         if (startDay < 1 || startDay > 31) {
-            throw invalid_argument("Invalid start day for viewing week schedule");
+            throw DayExceptions(5);
         }
         for (int i = startDay; i < startDay + 7 && i <= 31; ++i) {
             cout << days[i - 1].toString() << endl;
         }
     }
 
-private:
-    void initializeDays() {
-        string daysOfWeek[] = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
-        for (int i = 0; i < 31; ++i) {
-            days[i] = Day(i + 1, daysOfWeek[i % 7]);
-        }
-    }
-
-    void saveToFile() const {
-        ofstream file("EventSaver.txt");
-        if (!file.is_open()) {
-            throw runtime_error("Unable to open file for saving");
-        }
-
-        for (int i = 0; i < 31; ++i) {
-            file << days[i].serialize();
-        }
-        file.close();
-    }
-
-    void loadFromFile() {
-        ifstream file("EventSaver.txt");
-        if (!file.is_open()) {
-            throw runtime_error("Unable to open file for loading");
-        }
-
-        string line;
-        while (getline(file, line)) {
-            if (line.empty()) continue;
-            int date;
-            stringstream ss(line);
-            string dateStr;
-            getline(ss, dateStr, '|');
-            date = stoi(dateStr);
-            days[date - 1].deserialize(line);
-        }
-        file.close();
-
-        /*
-         * Referred from https://www.digitalocean.com/community/tutorials/getline-in-c-plus-plus
-         */
-    }
 };
 
 int main() {
@@ -585,6 +618,11 @@ int main() {
         // Clear input stream and ignore remaining characters
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        /*
+         * Referred from : https://stackoverflow.com/questions/25020129/cin-ignorenumeric-limitsstreamsizemax-n
+         * Referred from : https://stackoverflow.com/questions/20446373/cin-ignorenumeric-limitsstreamsizemax-n-max-not-recognize-it
+         */
     }
 
 
@@ -670,8 +708,8 @@ int main() {
                 Event event(title, start, end, repeatType);
                 Scheduler.scheduleEvent(date, event);
             }
-            catch (const exception& e) {
-                cout << "Error: " << e.what() << endl;
+            catch (const exception& exception) {
+                cout << "Error: " << exception.what() << endl;
             }
             break;
         }
@@ -774,8 +812,8 @@ int main() {
             try {
                 Scheduler.viewDaySchedule(day);
             }
-            catch (const exception& e) {
-                cout << "Error: " << e.what() << endl;
+            catch (const exception& exception) {
+                cout << "Error: " << exception.what() << endl;
             }
             break;
         }
@@ -787,8 +825,8 @@ int main() {
             try {
                 Scheduler.viewWeekSchedule(startDay);
             }
-            catch (const exception& e) {
-                cout << "Error: " << e.what() << endl;
+            catch (const exception& exception) {
+                cout << "Error: " << exception.what() << endl;
             }
             break;
         }
