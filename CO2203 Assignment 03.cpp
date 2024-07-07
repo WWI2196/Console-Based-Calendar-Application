@@ -1,4 +1,4 @@
-// to access colors in the command prompt 
+// to access colors in the command instruct 
 #include<windows.h>
 #undef max
 
@@ -13,7 +13,7 @@
 //just 1 function used in displayCalendar_print function setw(2)
 #include <iomanip>
 
-// this global object of HANDLE class from windows.h header file to allow command prompt colors 
+// this global object of HANDLE class from windows.h header file to allow command instruct colors 
 HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 
 
@@ -183,6 +183,10 @@ public:
     void deserialize(const string& timeStr) {
         fromString(timeStr);
     }
+    /*
+     * Referred from the GitHub repository: Appointment-Booking https://github.com/pgagliano/Appointment-Booking/blob/master/myTime.cpp
+     * Author: Patrick Gagliano
+     */
 };
 
 class Event {
@@ -424,9 +428,14 @@ private:
          */
     }
 
+    void option_list(int i) {
+        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
+        SetConsoleTextAttribute(h, 14);
+        cout << option_list[i];
+        SetConsoleTextAttribute(h, 11);
+        cout << endl;
+    }
     
-
-
 public:
 
     Scheduler(int currentDay) : currentDay(currentDay) {
@@ -455,19 +464,20 @@ public:
             }
 
             if (days[date - 1].isDayOff) {
-                char confirmation;
+                string confirmation;
                 cout << "The selected day is marked as a day off. Do you want to proceed? (yes/no): ";
-                cin >> confirmation;
-                if (confirmation != 'yes' && confirmation != 'YES') {
-                    return;
+                cin.ignore();
+                getline(cin, confirmation);
+
+                if (confirmation != "yes" && confirmation != "YES") {
+                    // Remove the day off status
+                    days[date - 1].isDayOff = false;
                 }
                 else {
-                    days[date - 1].isDayOff = false;  // Remove the day off status
+                    return;
                 }
-
             }
 
-            string dayOfWeek = days[date - 1].dayOfWeek;
             Event newEvent = event;
             newEvent.repeatType = event.repeatType;
 
@@ -529,7 +539,6 @@ public:
     }
 
 
-
     void shiftEvent(int date, const string& title, int newDate) {
         try {
             if (date < currentDay || date > 31 || newDate < currentDay || newDate > 31) {
@@ -558,7 +567,7 @@ public:
     }
 
     void displayScheduler() {
-        cout << "July 2024 Calendar\n";
+        cout << "\n\t\t\tJuly 2024 Calendar\n";
         for (int i = 0; i < 31; ++i) {
             string dayStr = days[i].toString();
             if (!dayStr.empty()) {
@@ -567,12 +576,14 @@ public:
         }
     }
 
-    void option_list(int i) {
-        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
-        SetConsoleTextAttribute(h, 14);
-        cout << option_list[i];
-        SetConsoleTextAttribute(h, 11);
-        cout << endl;
+    bool isEventRepeating(int date, const string& title) const {
+        const Day& day = days[date - 1];
+        for (int i = 0; i < day.eventCount; ++i) {
+            if (day.events[i].title == title && day.events[i].repeatType != "none") {
+                return true;
+            }
+        }
+        return false;
     }
 
     void displayScheduler_print(int today) {
@@ -638,124 +649,135 @@ public:
         if (startDay < 1 || startDay > 31) {
             throw DayExceptions(5);
         }
-        for (int i = startDay; i < startDay + 7 && i <= 31; ++i) {
+
+        int startIndex = ((startDay - 1) / 7) * 7 + 1;
+        int endIndex = startIndex + 7;
+        if (startIndex >= 28) endIndex = 31;
+
+        for (int i = startIndex; i < endIndex; ++i) {
             cout << days[i - 1].toString() << endl;
         }
     }
-
-
 };
+
+int validateInput(int startValue, int endValue,const string& instruct) {
+    int input;
+
+    while (true) {
+        cout << instruct;
+        cin >> input;
+
+        if (!cin.fail() && input >= startValue && input <= endValue) {
+            break;
+        }
+        else {
+            cin.clear(); // Clear the error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+            cout << "Invalid input. Please enter a valid number between " << startValue << " and " << endValue << ".\n";
+        }
+    }
+    return input;
+}
+
+string validateString(const string& instruct) {
+    string input;
+
+    while (true) {
+        cout << instruct;
+        cin.ignore();
+        getline(cin, input);
+
+        if (input.empty()) {
+            cout << "You can not keep the title empty. Please enter a name." << endl;
+        }
+        else {
+            break;
+        }
+    }
+    return input;
+    
+}
+
+bool validateOption(const  string& instruct) {
+    string option;
+
+    cout << instruct;
+    cin.ignore();
+    getline(cin, option);
+    
+    //if the first letter starts with y or Y then return true else false
+    if (option[0] == 'y' || option[0] == 'Y') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void validateTime(const string& instruct, int& hour, int& minute) {
+    string timeInput;
+    char colon;
+
+    while (true) {
+        cout << instruct;
+        cin >> timeInput;
+
+        stringstream timeStream(timeInput);
+        if (timeStream >> hour >> colon >> minute && colon == ':' && (hour >= 0 && hour < 24) && (minute >= 0 && minute < 60)) {
+            break;
+        }
+        else {
+            cin.clear(); // Clear the error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+
+            /*
+         * Referred from : https://stackoverflow.com/questions/25020129/cin-ignorenumeric-limitsstreamsizemax-n
+         * Referred from : https://stackoverflow.com/questions/20446373/cin-ignorenumeric-limitsstreamsizemax-n-max-not-recognize-it
+         */
+
+            cout << "Invalid time format. Please enter time in HH:MM format(24 hour).\n";
+        }
+    }
+}
 
 int main() {
 
     int currentDay;
 
-    while (true) {
-
-        cout << "Enter the current day (1-31): ";
-        cin >> currentDay;
-
-        try {
-
-            if (!cin.fail() || currentDay >= 1 && currentDay <= 31) {
-                break; // Valid input, break out of the loop
-            }
-            else {
-                cout << "Invalid input. Please enter a valid date.\n";
-            }
-        }
-        catch (invalid_argument& exception) {
-            cout << "Invalid input. Please enter a valid date.\n";
-        }
-        catch (out_of_range& exception) {
-            cout << "The number entered is out of range.\n";
-        }
-
-        // Clear input stream and ignore remaining characters
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        /*
-         * Referred from : https://stackoverflow.com/questions/25020129/cin-ignorenumeric-limitsstreamsizemax-n
-         * Referred from : https://stackoverflow.com/questions/20446373/cin-ignorenumeric-limitsstreamsizemax-n-max-not-recognize-it
-         */
-    }
+    currentDay = validateInput(1, 31, "\nEnter the current day (1-31): ");
 
 
-    Scheduler Scheduler(currentDay);
+    Scheduler scheduler(currentDay);
 
     while (true) {
 
-        Scheduler.displayScheduler_print(currentDay);
+        scheduler.displayScheduler_print(currentDay);
 
-        int option;
-        cout << "\nChoose an option: ";
-        cin >> option;
+        int option = validateInput(1, 8, "\nChoose an option: ");
 
         if (option == 8) {
             cout << "You have exited the program.\n";
             break;
         }
 
-        while (true) {
-
-            try {
-
-                if (!cin.fail() || currentDay >= 1 && currentDay <= 8) {
-                    break; // Valid input, break out of the loop
-                }
-                else {
-                    cout << "Invalid input. Please enter a valid option.\n";
-                }
-            }
-            catch (invalid_argument& exception) {
-                cout << "Invalid input. Please enter a valid option.\n";
-            }
-            catch (out_of_range& exception) {
-                cout << "Please enter a valid option.\n";
-            }
-
-            // Clear input stream and ignore remaining characters
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
-
 
         switch (option) {
         case 1: {
-            int date, startHour, startMinute, endHour, endMinute;
-            string title, repeatType;
 
-            while (true) {
-                printf("Enter date (%d-31): ", currentDay);
-                fflush(stdout);
-                cin >> date;
+            int startHour, startMinute, endHour, endMinute;
 
-                if (cin.fail() || date < currentDay || date > 31) {
-                    cin.clear(); // Clear the error flag
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
-                }
-                else {
-                    break;
-                }
-            }
+            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+            string title = validateString("Enter event title: ");
+            validateTime("Enter start time (HH:MM): ", startHour, startMinute);
+            validateTime("Enter end time (HH:MM): ", endHour, endMinute);
+            string repeatType = validateString("Enter repeat type (none, daily, weekly): ");
 
-            cout << "Enter event title: ";
-            cin.ignore();
-            getline(cin, title);
-            cout << "Enter start time (HH MM): ";
-            cin >> startHour >> startMinute;
-            cout << "Enter end time (HH MM): ";
-            cin >> endHour >> endMinute;
-            cout << "Enter repeat type (none, daily, weekly): ";
-            cin >> repeatType;
 
             try {
                 Time start(startHour, startMinute);
                 Time end(endHour, endMinute);
                 Event event(title, start, end, repeatType);
-                Scheduler.scheduleEvent(date, event);
+                scheduler.scheduleEvent(date, event);
             }
             catch (const exception& exception) {
                 cout << "Error: " << exception.what() << endl;
@@ -763,116 +785,49 @@ int main() {
             break;
         }
         case 2: {
-            int date;
-            string title;
-            char repeatChoice;
-            bool deleteRepeats = false;
 
-            while (true) {
-                cout << "Enter date (1-31): ";
-                cin >> date;
+            int date = validateInput(currentDay, 31, "Enter date (1-31): ");
+            string title = validateString("Enter event title: ");
 
-                if (cin.fail() || date < currentDay || date > 31) {
-                    cin.clear(); // Clear the error flag
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
-                }
-                else {
-                    break;
-                }
+            if (scheduler.isEventRepeating(date, title)) {
+                bool deleteRepeats = validateOption("Delete all repeating events with the same title? (yes/no): ");
+                scheduler.cancelEvent(date, title, deleteRepeats);
             }
-
-            cout << "Enter event title: ";
-            cin.ignore();
-            getline(cin, title);
-            cout << "Delete all repeating events with the same title? (y/n): "; // check this only for the repeating events
-            cin >> repeatChoice;
-            deleteRepeats = (repeatChoice == 'yes' || repeatChoice == 'YES');
-
-            Scheduler.cancelEvent(date, title, deleteRepeats);
+            else {
+                scheduler.cancelEvent(date, title, false);
+            }
             break;
         }
         case 3: {
-            int date, newDate;
-            string title;
 
-            while (true) {
-                printf("Enter date (%d-31): ", currentDay);
-                fflush(stdout);
-                cin >> date;
+            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+            string title = validateString("Enter event title: ");
+            int newDate = validateInput(currentDay, 31, "Enter new date (" + to_string(currentDay) + "-31): ");
 
-                if (cin.fail() || date < currentDay || date > 31) {
-                    cin.clear(); // Clear the error flag
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
-                }
-                else {
-                    break;
-                }
-            }
-
-            cout << "Enter event title: ";
-            cin.ignore();
-            getline(cin, title);
-
-            while (true) {
-                printf("Enter new date (%d-31): ", currentDay);
-                fflush(stdout);
-                cin >> newDate;
-
-                if (cin.fail() || date < currentDay || date > 31) {
-                    cin.clear(); // Clear the error flag
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
-                }
-                else {
-                    break;
-                }
-            }
-
-            Scheduler.shiftEvent(date, title, newDate);
+            scheduler.shiftEvent(date, title, newDate);
             break;
         }
         case 4: {
-            int date;
 
-            while (true) {
-                printf("Enter date (%d-31): ", currentDay);
-                fflush(stdout);
-                cin >> date;
+            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
 
-                if (cin.fail() || date < currentDay || date > 31) {
-                    cin.clear(); // Clear the error flag
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-                    cout << "Invalid date. Please enter a valid date between " << currentDay << " and 31.\n" << endl;
-                }
-                else {
-                    break;
-                }
-            }
-
-            Scheduler.setDayOff(date);
+            scheduler.setDayOff(date);
             break;
         }
         case 5: {
-            int day;
-            cout << "Enter day (1-31): ";
-            cin >> day;
-            try {
-                Scheduler.viewDaySchedule(day);
-            }
-            catch (const exception& exception) {
-                cout << "Error: " << exception.what() << endl;
-            }
+
+            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+
+            scheduler.setDayOff(date);
             break;
         }
 
         case 6: {
-            int startDay;
-            cout << "Enter start day (1-31): ";
-            cin >> startDay;
+
+            int startDate = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+
             try {
-                Scheduler.viewWeekSchedule(startDay);
+                scheduler.viewWeekSchedule(startDate);
             }
             catch (const exception& exception) {
                 cout << "Error: " << exception.what() << endl;
@@ -880,11 +835,13 @@ int main() {
             break;
         }
         case 7: {
-            Scheduler.displayScheduler();
+
+            scheduler.displayScheduler();
             break;
         }
 
         }
+
     }
 
     return 0;
