@@ -1,3 +1,7 @@
+// to access colors in the command prompt 
+#include<windows.h>
+#undef max
+
 #include <iostream>
 #include <string>
 #include <cstdio>
@@ -5,6 +9,13 @@
 #include <fstream>
 #include <sstream>
 #include <limits> // for the numeric_limits of the streamsize in the ignore function
+
+//just 1 function used in displayCalendar_print function setw(2)
+#include <iomanip>
+
+// this global object of HANDLE class from windows.h header file to allow command prompt colors 
+HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
 
 using namespace std;
 
@@ -306,19 +317,6 @@ public:
         eventCount = 0;
     }
 
-    //void sortEvents() {
-    //    // Implementing a simple bubble sort to sort events by start time
-    //    for (int i = 0; i < eventCount - 1; ++i) {
-    //        for (int j = 0; j < eventCount - i - 1; ++j) {
-    //            if (events[j].startTime.isGreaterThan(events[j + 1].startTime)) {
-    //                Event temp = events[j];
-    //                events[j] = events[j + 1];
-    //                events[j + 1] = temp;
-    //            }
-    //        }
-    //    }
-    //}
-
     string toString() const {
         if (eventCount == 0 && !isDayOff) return "";
 
@@ -329,14 +327,16 @@ public:
         }
         result += "\n";
 
-        // Sort the events by start time before printing
-        /*const_cast<Day*>(this)->sortEvents();*/
-
         for (int i = 0; i < eventCount; ++i) {
             result += "  " + events[i].toString() + "\n";
         }
 
         return result;
+    }
+
+    bool toString_print() const {
+        if (isDayOff) return true;
+        else return false;
     }
 
     string serialize() const {
@@ -423,6 +423,9 @@ private:
          * Referred from https://www.digitalocean.com/community/tutorials/getline-in-c-plus-plus
          */
     }
+
+    
+
 
 public:
 
@@ -554,8 +557,8 @@ public:
         }
     }
 
-    void displayScheduler() const {
-        cout << "July 2024 Scheduler\n";
+    void displayScheduler() {
+        cout << "July 2024 Calendar\n";
         for (int i = 0; i < 31; ++i) {
             string dayStr = days[i].toString();
             if (!dayStr.empty()) {
@@ -564,12 +567,65 @@ public:
         }
     }
 
-    /*void setCurrentDay(int day) {
-        if (day < 1 || day > 31) {
-            throw invalid_argument("Invalid day for setting current day");
+    void option_list(int i) {
+        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
+        SetConsoleTextAttribute(h, 14);
+        cout << option_list[i];
+        SetConsoleTextAttribute(h, 11);
+        cout << endl;
+    }
+
+    void displayScheduler_print(int today) {
+        int option_increment = 0;
+        cout << endl;
+        SetConsoleTextAttribute(h, 11);
+        cout << "======================================================" << endl;
+        SetConsoleTextAttribute(h, 14);
+        cout << "                     2024 > July" << endl;
+        SetConsoleTextAttribute(h, 11);
+        cout << "======================================================" << endl << endl;
+        SetConsoleTextAttribute(h, 14);
+        cout << "   Su Mo Tu We Th Fr Sa";
+        SetConsoleTextAttribute(h, 11);
+        option_list(option_increment);
+
+        int startDay = 1; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+        for (int i = 0; i <= 31; ++i) {
+            if (i == 0) {
+                cout << "      ";
+            }
+            else if (i == today) {
+                SetConsoleTextAttribute(h, 176);
+                cout << setw(2) << i << " ";
+                SetConsoleTextAttribute(h, 11);
+            }
+            else if (days[i - 1].toString_print()) {
+                SetConsoleTextAttribute(h, 12);
+                cout << setw(2) << i << " ";
+                SetConsoleTextAttribute(h, 11);
+            }
+            else {
+                cout << setw(2) << i << " ";
+            }
+            if ((i + startDay) % 7 == 0) {
+                option_increment++;
+                option_list(option_increment);
+                //cout << endl;
+                cout << "   ";
+            }
         }
-        currentDay = day;
-    }*/
+        option_list(5);
+        option_list(6);
+        SetConsoleTextAttribute(h, 12);
+        cout << "   XX";
+        SetConsoleTextAttribute(h, 14);
+        cout << " > Off Days";
+        option_list(7);
+        cout << "\n";
+        SetConsoleTextAttribute(h, 7);
+
+    }
 
     void viewDaySchedule(int day) const {
         if (day < 1 || day > 31) {
@@ -608,10 +664,10 @@ int main() {
                 cout << "Invalid input. Please enter a valid date.\n";
             }
         }
-        catch (invalid_argument& e) {
+        catch (invalid_argument& exception) {
             cout << "Invalid input. Please enter a valid date.\n";
         }
-        catch (out_of_range& e) {
+        catch (out_of_range& exception) {
             cout << "The number entered is out of range.\n";
         }
 
@@ -630,14 +686,7 @@ int main() {
 
     while (true) {
 
-        cout << "\n1. Schedule an Event\n"
-            "2. Cancel an Event\n"
-            "3. Shift an Event\n"
-            "4. Set a Day Off\n"
-            "5. View Day Schedule\n"
-            "6. View Week Schedule\n"
-            "7. View Month Schedule\n"
-            "8. Exit\n";
+        Scheduler.displayScheduler_print(currentDay);
 
         int option;
         cout << "\nChoose an option: ";
@@ -659,10 +708,10 @@ int main() {
                     cout << "Invalid input. Please enter a valid option.\n";
                 }
             }
-            catch (invalid_argument& e) {
+            catch (invalid_argument& exception) {
                 cout << "Invalid input. Please enter a valid option.\n";
             }
-            catch (out_of_range& e) {
+            catch (out_of_range& exception) {
                 cout << "Please enter a valid option.\n";
             }
 
