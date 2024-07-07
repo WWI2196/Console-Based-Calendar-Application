@@ -183,6 +183,10 @@ public:
     void deserialize(const string& timeStr) {
         fromString(timeStr);
     }
+    /*
+     * Referred from the GitHub repository: Appointment-Booking https://github.com/pgagliano/Appointment-Booking/blob/master/myTime.cpp
+     * Author: Patrick Gagliano
+     */
 };
 
 class Event {
@@ -424,9 +428,14 @@ private:
          */
     }
 
+    void option_list(int i) {
+        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
+        SetConsoleTextAttribute(h, 14);
+        cout << option_list[i];
+        SetConsoleTextAttribute(h, 11);
+        cout << endl;
+    }
     
-
-
 public:
 
     Scheduler(int currentDay) : currentDay(currentDay) {
@@ -530,7 +539,6 @@ public:
     }
 
 
-
     void shiftEvent(int date, const string& title, int newDate) {
         try {
             if (date < currentDay || date > 31 || newDate < currentDay || newDate > 31) {
@@ -576,14 +584,6 @@ public:
             }
         }
         return false;
-    }
-
-    void option_list(int i) {
-        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
-        SetConsoleTextAttribute(h, 14);
-        cout << option_list[i];
-        SetConsoleTextAttribute(h, 11);
-        cout << endl;
     }
 
     void displayScheduler_print(int today) {
