@@ -324,7 +324,20 @@ public:
     string toString() const {
         if (eventCount == 0 && !isDayOff) return "";
 
-        string result = to_string(date) + " July 2024 (" + dayOfWeek + ")";
+        stringstream ss;
+        ss << "\n" << date << " July 2024 (" << dayOfWeek << ")";
+
+        if (isDayOff) {
+            ss << " (Day Off)";
+        }
+        ss << "\n";
+
+        for (int i = 0; i < eventCount; ++i) {
+            ss << "  " << events[i].toString() << "\n";
+        }
+
+        return ss.str();
+        /*string result = to_string(date) + " July 2024 (" + dayOfWeek + ")";
 
         if (isDayOff) {
             result += " (Day Off)";
@@ -335,7 +348,7 @@ public:
             result += "  " + events[i].toString() + "\n";
         }
 
-        return result;
+        return result;*/
     }
 
     bool toString_print() const {
@@ -566,12 +579,38 @@ public:
         }
     }
 
+    void viewDaySchedule(int day) const {
+        if (day < 1 || day > 31) {
+            throw DayExceptions(3);
+        }
+        cout << days[day - 1].toString() << endl;
+    }
+
+    void viewWeekSchedule(int startDay) const {
+        if (startDay < 1 || startDay > 31) {
+            throw DayExceptions(5);
+        }
+
+        int startIndex = ((startDay) / 7) * 7;
+        int endIndex = startIndex + 7;
+        if (startIndex >= 28) endIndex = 31;
+
+        for (int i = (startIndex == 0? 1:startIndex) ; i < endIndex; ++i) {
+            string output = days[i - 1].toString();
+            /*cout << days[i - 1].toString() << endl;*/
+            if (!output.empty()) {
+                cout << output;
+            }
+        }
+    }
+
     void displayScheduler() {
         cout << "\n\t\t\tJuly 2024 Calendar\n";
         for (int i = 0; i < 31; ++i) {
             string dayStr = days[i].toString();
+
             if (!dayStr.empty()) {
-                cout << dayStr << endl;
+                cout << dayStr;
             }
         }
     }
@@ -636,27 +675,6 @@ public:
         cout << "\n";
         SetConsoleTextAttribute(h, 7);
 
-    }
-
-    void viewDaySchedule(int day) const {
-        if (day < 1 || day > 31) {
-            throw DayExceptions(3);
-        }
-        cout << days[day - 1].toString() << endl;
-    }
-
-    void viewWeekSchedule(int startDay) const {
-        if (startDay < 1 || startDay > 31) {
-            throw DayExceptions(5);
-        }
-
-        int startIndex = ((startDay - 1) / 7) * 7 + 1;
-        int endIndex = startIndex + 7;
-        if (startIndex >= 28) endIndex = 31;
-
-        for (int i = startIndex; i < endIndex; ++i) {
-            cout << days[i - 1].toString() << endl;
-        }
     }
 };
 
@@ -818,7 +836,13 @@ int main() {
 
             int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
 
-            scheduler.setDayOff(date);
+            try {
+                scheduler.viewDaySchedule(date);
+
+            }
+            catch (const exception& exception) {
+                cout << "Error: " << exception.what() << endl;
+            }
             break;
         }
 

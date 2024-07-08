@@ -2,5 +2,8 @@
 3|CH|14:50|15:50|none
 7|IOC|08:30|10:30|none
 14|off|
+15|IIT|08:30|10:30|weekly
 21|QQT|13:45|14:50|weekly
+22|IIT|08:30|10:30|weekly
 28|QQT|13:45|14:50|weekly
+29|IIT|08:30|10:30|weekly
