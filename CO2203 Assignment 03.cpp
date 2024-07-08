@@ -151,27 +151,28 @@ public:
         }
     }
 
-    bool isLessThan(const Time& other) const {
-        return (hour < other.hour) || (hour == other.hour && minute < other.minute);
+    bool isLessThan(Time& comparisonTime) const {
+        return (hour < comparisonTime.hour) || (hour == comparisonTime.hour && minute < comparisonTime.minute);
     }
 
-    bool isGreaterThan(const Time& other) const {
-        return (hour > other.hour) || (hour == other.hour && minute > other.minute);
+    bool isGreaterThan(Time& comparisonTime) const {
+        return (hour > comparisonTime.hour) || (hour == comparisonTime.hour && minute > comparisonTime.minute);
     }
 
-    bool isEqualTo(const Time& other) const {
-        return hour == other.hour && minute == other.minute;
+    bool isEqualTo(Time& comparisonTime) const {
+        return hour == comparisonTime.hour && minute == comparisonTime.minute;
     }
 
     string toString() const {
         return (hour < 10 ? "0" : "") + to_string(hour) + ":" + (minute < 10 ? "0" : "") + to_string(minute);
     }
 
-    void fromString(const string& timeStr) {
-        stringstream ss(timeStr);
-        char delim;
-        ss >> hour >> delim >> minute;
-        if (/*delim != ':' ||*/ hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
+    void fromString(string& timeString) {
+        stringstream timeStream(timeString);
+        char separator;
+
+        timeStream >> hour >> separator >> minute;
+        if (hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
             throw TimeExceptions(1);
         }
     }
@@ -199,27 +200,29 @@ public:
         }
     }
 
-    bool overlaps(const Event& other) const {
-        return (startTime.isLessThan(other.endTime) && endTime.isGreaterThan(other.startTime));
+    bool overlaps(Event& comparisonEvent) const {
+        return (startTime.isLessThan(comparisonEvent.endTime) && endTime.isGreaterThan(comparisonEvent.startTime));
     }
 
     string toString() const {
         return title + " from " + startTime.toString() + " to " + endTime.toString() + " (" + repeatType + ")";
     }
 
-    string serialize() const {
+    string formatEventDataToString() const {
         return title + "|" + startTime.toString() + "|" + endTime.toString() + "|" + repeatType;
     }
 
-    void deserialize(const string& eventStr) {
-        stringstream ss(eventStr);
-        getline(ss, title, '|');
-        string startTimeStr, endTimeStr;
-        getline(ss, startTimeStr, '|');
-        getline(ss, endTimeStr, '|');
-        getline(ss, repeatType);
-        startTime.fromString(startTimeStr);
-        endTime.fromString(endTimeStr);
+    void extractEventData(const string& eventString) {
+        stringstream eventStream(eventString);
+        getline(eventStream, title, '|');
+
+        string startTimeString, endTimeString;
+        getline(eventStream, startTimeString, '|');
+        getline(eventStream, endTimeString, '|');
+        getline(eventStream, repeatType);
+
+        startTime.fromString(startTimeString);
+        endTime.fromString(endTimeString);
     }
 };
 
@@ -251,7 +254,7 @@ public:
         this->eventCount = 0;
     }
 
-    void addEvent(const Event& event) {
+    void addEvent(Event& event) {
         if (isDayOff) {
             throw DayExceptions(1);
         }
@@ -267,7 +270,7 @@ public:
         sortEvents();
     }
 
-    void deleteEvent(const string& title) {
+    void deleteEvent(string& title) {
         bool eventFound = false;
         for (int i = 0; i < eventCount; ++i) {
             if (events[i].title == title) {
@@ -285,7 +288,7 @@ public:
     }
 
 
-    void shiftEvent(const string& title, int newDate, Day* days) {
+    void shiftEvent(string& title, int newDate, Day* days) {
         bool eventFound = false;
         for (int i = 0; i < eventCount; ++i) {
             if (events[i].title == title) {
@@ -329,18 +332,7 @@ public:
         }
 
         return ss.str();
-        /*string result = to_string(date) + " July 2024 (" + dayOfWeek + ")";
-
-        if (isDayOff) {
-            result += " (Day Off)";
-        }
-        result += "\n";
-
-        for (int i = 0; i < eventCount; ++i) {
-            result += "  " + events[i].toString() + "\n";
-        }
-
-        return result;*/
+        
     }
 
     bool toString_print() const {
@@ -348,36 +340,36 @@ public:
         else return false;
     }
 
-    string serialize() const {
-        string serializedDay;
+    string formatDayDataToString() const {
+        string dayString;
         if (isDayOff) {
-            serializedDay += to_string(date) + "|off|\n";
+            dayString = dayString + to_string(date) + "|off|\n";
         }
         for (int i = 0; i < eventCount; ++i) {
-            serializedDay += to_string(date) + "|" + events[i].serialize() + "\n";
+            dayString = dayString + to_string(date) + "|" + events[i].formatEventDataToString() + "\n";
         }
-        return serializedDay;
+        return dayString;
     }
 
-    void deserialize(const string& dayStr) {
-        stringstream ss(dayStr);
+    void extractDayData(string& dayStr) {
+        stringstream dayStream(dayStr);
         string line;
-        while (getline(ss, line)) {
+        while (getline(dayStream, line)) {
             if (line.empty()) {
                 continue;
             }
-            stringstream ssLine(line);
-            string token;
-            getline(ssLine, token, '|');
-            date = stoi(token);
-            getline(ssLine, token, '|');
-            if (token == "off") {
+            stringstream lineStream(line);
+            string data;
+            getline(lineStream, data, '|');
+            date = stoi(data);
+            getline(lineStream, data, '|');
+            if (data == "off") {
                 isDayOff = true;
                 clearEvents();
             }
             else {
                 Event event;
-                event.deserialize(line.substr(line.find('|') + 1));
+                event.extractEventData(line.substr(line.find('|') + 1));
                 isDayOff = false;
                 addEvent(event);
             }
@@ -405,7 +397,7 @@ private:
         }
 
         for (int i = 0; i < 31; ++i) {
-            file << days[i].serialize();
+            file << days[i].formatDayDataToString();
         }
         file.close();
     }
@@ -420,11 +412,11 @@ private:
         while (getline(file, line)) {
             if (line.empty()) continue;
             int date;
-            stringstream ss(line);
+            stringstream lineStream(line);
             string dateStr;
-            getline(ss, dateStr, '|');
+            getline(lineStream, dateStr, '|');
             date = stoi(dateStr);
-            days[date - 1].deserialize(line);
+            days[date - 1].extractDayData(line);
         }
         file.close();
 
@@ -433,10 +425,10 @@ private:
          */
     }
 
-    void option_list(int i) {
+    void option_list(int index) {
         string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
         SetConsoleTextAttribute(h, 14);
-        cout << option_list[i];
+        cout << option_list[index];
         SetConsoleTextAttribute(h, 11);
         cout << endl;
     }
@@ -462,7 +454,7 @@ public:
         }
     }
 
-    void scheduleEvent(int date, const Event& event) {
+    void scheduleEvent(int date, Event& event) {
         try {
             if (date < currentDay || date > 31) {
                 throw DayExceptions(4);
@@ -510,7 +502,7 @@ public:
             cout << "Error: " << exception.what() << endl;
         }
     }
-    void cancelEvent(int date, const string& title, bool deleteRepeats) {
+    void cancelEvent(int date, string& title, bool deleteRepeats) {
         try {
             if (date < currentDay || date > 31) {
                 throw DayExceptions(4);
@@ -544,7 +536,7 @@ public:
     }
 
 
-    void shiftEvent(int date, const string& title, int newDate) {
+    void shiftEvent(int date, string& title, int newDate) {
         try {
             if (date < currentDay || date > 31 || newDate < currentDay || newDate > 31) {
                 throw EventExceptions(5);
