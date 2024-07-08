@@ -171,17 +171,9 @@ public:
         stringstream ss(timeStr);
         char delim;
         ss >> hour >> delim >> minute;
-        if (delim != ':' || hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
+        if (/*delim != ':' ||*/ hour < 0 || hour >= 24 || minute < 0 || minute >= 60) {
             throw TimeExceptions(1);
         }
-    }
-
-    string serialize() const {
-        return toString();
-    }
-    
-    void deserialize(const string& timeStr) {
-        fromString(timeStr);
     }
     /*
      * Referred from the GitHub repository: Appointment-Booking https://github.com/pgagliano/Appointment-Booking/blob/master/myTime.cpp
@@ -216,7 +208,7 @@ public:
     }
 
     string serialize() const {
-        return title + "|" + startTime.serialize() + "|" + endTime.serialize() + "|" + repeatType;
+        return title + "|" + startTime.toString() + "|" + endTime.toString() + "|" + repeatType;
     }
 
     void deserialize(const string& eventStr) {
@@ -226,8 +218,8 @@ public:
         getline(ss, startTimeStr, '|');
         getline(ss, endTimeStr, '|');
         getline(ss, repeatType);
-        startTime.deserialize(startTimeStr);
-        endTime.deserialize(endTimeStr);
+        startTime.fromString(startTimeStr);
+        endTime.fromString(endTimeStr);
     }
 };
 
@@ -741,7 +733,7 @@ void validateTime(const string& instruct, int& hour, int& minute) {
         cin >> timeInput;
 
         stringstream timeStream(timeInput);
-        if (timeStream >> hour >> colon >> minute && colon == ':' && (hour >= 0 && hour < 24) && (minute >= 0 && minute < 60)) {
+        if (timeStream >> hour >> colon >> minute && (hour >= 0 && hour < 24) && (minute >= 0 && minute < 60)) {
             break;
         }
         else {
