@@ -4,10 +4,8 @@
 14|off|
 15|IIT|08:30|10:30|weekly
 15|KBS|14:50|16:45|none
-17|SBS|09:10|13:15|weekly
+15|CK|16:45|16:55|none
+21|YT|10:30|12:30|none
 21|QQT|13:45|14:50|weekly
 22|IIT|08:30|10:30|weekly
-24|SBS|09:10|13:15|weekly
-28|QQT|13:45|14:50|weekly
-29|IIT|08:30|10:30|weekly
-31|SBS|09:10|13:15|weekly
+22|CJI|10:45|12:45|none
