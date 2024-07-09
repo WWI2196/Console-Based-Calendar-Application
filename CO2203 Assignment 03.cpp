@@ -19,6 +19,45 @@ HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 
 using namespace std;
 
+string setColor(const string& txt, const int& color) {
+
+    switch (color) {
+    case 8:
+        SetConsoleTextAttribute(h, 8); // Light Ash
+        break;
+    case 9:
+        SetConsoleTextAttribute(h, 9); // Light Blue
+        break;
+    case 10:
+        SetConsoleTextAttribute(h, 10); // Light Green
+        break;
+    case 11:
+        SetConsoleTextAttribute(h, 11); // Light Aqua
+        break;
+    case 12:
+        SetConsoleTextAttribute(h, 12); // Light Red
+        break;
+    case 13:
+        SetConsoleTextAttribute(h, 13); // Light Purple
+        break;
+    case 14:
+        SetConsoleTextAttribute(h, 14); // Light Yello
+        break;
+    case 15:
+        SetConsoleTextAttribute(h, 15); // Light White
+        break;
+    case 16:
+        SetConsoleTextAttribute(h, 176); // Light White
+        break;
+    default:
+        SetConsoleTextAttribute(h, 8);  // Default color
+        break;
+    }
+
+    return txt;
+}
+
+
 class Exceptions : public exception {
 protected:
     int errorCode;
@@ -426,10 +465,8 @@ private:
     }
 
     void option_list(int index) {
-        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };
-        SetConsoleTextAttribute(h, 14);
-        cout << option_list[index];
-        SetConsoleTextAttribute(h, 11);
+        string option_list[8] = { "       1. Schedule an Event","      2. Cancel an Event","      3. Shift an Event","      4. Set a Day Off","      5. View Day Schedule","               6. View Week Schedule","\t\t\t      7. View Month Schedule","\t      8. Exit" };        
+        cout << setColor(option_list[index],14);
         cout << endl;
     }
     
@@ -441,7 +478,7 @@ public:
             loadEventsFrom_txt();
         }
         catch (const exception& exception) {
-            cout << "Error : " << exception.what() << endl;
+            cout << setColor("   Error : ",12) << setColor(exception.what(),12) << endl;
         }
     }
 
@@ -450,7 +487,7 @@ public:
             saveEventsTo_txt();
         }
         catch (const exception& exception) {
-            cout << "Error " << exception.what() << endl;
+            cout << setColor("   Error ",12) << setColor(exception.what(),12) << endl;
         }
     }
 
@@ -462,7 +499,8 @@ public:
 
             if (days[date - 1].isDayOff) {
                 string confirmation;
-                cout << "The selected day is marked as a day off. Do you want to proceed? (yes/no): ";
+                cout << "   The selected day is marked as a day off. Do you want to proceed? (yes / no)";
+                
                 cin.ignore();
                 getline(cin, confirmation);
 
@@ -496,10 +534,10 @@ public:
                 days[date - 1].addEvent(newEvent);
             }
 
-            cout << "Event scheduled successfully.\n";
+            cout << setColor("   Event scheduled successfully.\n",10);
         }
         catch (const exception& exception) {
-            cout << "Error: " << exception.what() << endl;
+            cout << setColor("   Error: ",12) << setColor(exception.what(),12) << endl;
         }
     }
     void cancelEvent(int date, string& title, bool deleteRepeats) {
@@ -528,10 +566,10 @@ public:
                 days[date - 1].deleteEvent(title);
             }
 
-            cout << "Event cancelled successfully.\n";
+            cout << setColor("   Event cancelled successfully.\n",12);
         }
         catch (const exception& exception) {
-            cout << "Error: " << exception.what() << endl;
+            cout << setColor("   Error: ",12) << setColor(exception.what(),12) << endl;
         }
     }
 
@@ -542,10 +580,10 @@ public:
                 throw EventExceptions(5);
             }
             days[date - 1].shiftEvent(title, newDate, days);
-            cout << "Event shifted successfully.\n";
+            cout << setColor("   Event shifted successfully.\n",10);
         }
         catch (const exception& exception) {
-            cout << "Error: " << exception.what() << endl;
+            cout << setColor("   Error: ",12) << setColor(exception.what(),12) << endl;
         }
     }
 
@@ -556,10 +594,10 @@ public:
             }
             days[date - 1].isDayOff = true;
             days[date - 1].clearEvents();
-            cout << "Day off set for " << date << " July 2024.\n";
+            cout << setColor("   Day off set for ",10) << setColor(to_string(date),10) << setColor(" July 2024.\n",10);
         }
         catch (const exception& exception) {
-            cout << "Error: " << exception.what() << endl;
+            cout << setColor("   Error: ",12) << setColor(exception.what(),12) << endl;
         }
     }
 
@@ -567,7 +605,7 @@ public:
         if (day < 1 || day > 31) {
             throw DayExceptions(3);
         }
-        cout << days[day - 1].toString() << endl;
+        cout << "   "<<setColor(days[day - 1].toString(),9) << endl;
     }
 
     void viewWeekSchedule(int startDay) const {
@@ -583,18 +621,18 @@ public:
             string output = days[i - 1].toString();
             /*cout << days[i - 1].toString() << endl;*/
             if (!output.empty()) {
-                cout << output;
+                cout <<"   "<<setColor(output,9);
             }
         }
     }
 
     void displayScheduler() {
-        cout << "\n\t\t\tJuly 2024 Calendar\n";
+        cout << setColor("\n\t\t\tJuly 2024 Calendar\n",9);
         for (int i = 0; i < 31; ++i) {
             string dayStr = days[i].toString();
 
             if (!dayStr.empty()) {
-                cout << dayStr;
+                cout <<"   "<<setColor(dayStr,9);
             }
         }
     }
@@ -612,15 +650,11 @@ public:
     void displayScheduler_print(int today) {
         int option_increment = 0;
         cout << endl;
-        SetConsoleTextAttribute(h, 11);
-        cout << "======================================================" << endl;
-        SetConsoleTextAttribute(h, 14);
-        cout << "                     2024 > July" << endl;
-        SetConsoleTextAttribute(h, 11);
-        cout << "======================================================" << endl << endl;
-        SetConsoleTextAttribute(h, 14);
-        cout << "   Su Mo Tu We Th Fr Sa";
-        SetConsoleTextAttribute(h, 11);
+        
+        cout << setColor("======================================================",11) << endl;
+        cout << setColor("                     2024 > July", 14) << endl;
+        cout << setColor("======================================================", 11) << endl << endl;
+        cout << setColor("   Su Mo Tu We Th Fr Sa",14);
         option_list(option_increment);
 
         int startDay = 1; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -629,44 +663,35 @@ public:
             if (i == 0) {
                 cout << "      ";
             }
-            else if (i == today) {
-                SetConsoleTextAttribute(h, 176);
-                cout << setw(2) << i << " ";
-                SetConsoleTextAttribute(h, 11);
+            else if (i == today) {    
+                cout << setw(2) << setColor(to_string(i), 16) << " ";
             }
             else if (days[i - 1].toString_print()) {
-                SetConsoleTextAttribute(h, 12);
-                cout << setw(2) << i << " ";
-                SetConsoleTextAttribute(h, 11);
+                cout << setw(2) << setColor(to_string(i), 12) << " ";
             }
             else {
-                cout << setw(2) << i << " ";
+                cout << setw(2) << setColor(to_string(i),11) << " ";
             }
             if ((i + startDay) % 7 == 0) {
                 option_increment++;
                 option_list(option_increment);
-                //cout << endl;
                 cout << "   ";
             }
         }
         option_list(5);
         option_list(6);
-        SetConsoleTextAttribute(h, 12);
-        cout << "   XX";
-        SetConsoleTextAttribute(h, 14);
-        cout << " > Off Days";
+        cout << setColor("   XX",12);
+        cout << setColor(" > Off Days",14);
         option_list(7);
         cout << "\n";
-        SetConsoleTextAttribute(h, 7);
-
     }
 };
 
-int validateInput(int startValue, int endValue,const string& instruct) {
+int validateInput(int startValue, int endValue, const string& instruct, bool value) {
     int input;
 
     while (true) {
-        cout << instruct;
+        cout << setColor(instruct, 8);
         cin >> input;
 
         if (!cin.fail() && input >= startValue && input <= endValue) {
@@ -675,7 +700,26 @@ int validateInput(int startValue, int endValue,const string& instruct) {
         else {
             cin.clear(); // Clear the error flag
             cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-            cout << "Invalid input. Please enter a valid number between " << startValue << " and " << endValue << ".\n";
+            cout << setColor("Invalid input. Please enter a valid number between ", 12) << setColor(to_string(startValue), 12) << setColor(" and ", 12) << setColor(to_string(endValue), 12) << ".\n";
+        }
+    }
+    return input;
+}
+
+int validateInput(int startValue, int endValue,const string& instruct) {
+    int input;
+
+    while (true) {
+        cout << setColor(instruct,15);
+        cin >> input;
+
+        if (!cin.fail() && input >= startValue && input <= endValue) {
+            break;
+        }
+        else {
+            cin.clear(); // Clear the error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
+            cout << setColor("   Invalid input. Please enter a valid number between ",12) << setColor(to_string(startValue),12) << setColor(" and ",12) <<setColor(to_string(endValue),12) << ".\n";
         }
     }
     return input;
@@ -685,12 +729,12 @@ string validateString(const string& instruct) {
     string input;
 
     while (true) {
-        cout << instruct;
+        cout << setColor(instruct,15);
         cin.ignore();
         getline(cin, input);
 
         if (input.empty()) {
-            cout << "You can not keep the title empty. Please enter a name." << endl;
+            cout << setColor("      You can not keep the title empty. Please enter a name.",12) << endl;
         }
         else {
             break;
@@ -703,7 +747,7 @@ string validateString(const string& instruct) {
 bool validateOption(const  string& instruct) {
     string option;
 
-    cout << instruct;
+    cout << setColor(instruct, 15);
     cin.ignore();
     getline(cin, option);
     
@@ -721,7 +765,7 @@ void validateTime(const string& instruct, int& hour, int& minute) {
     char colon;
 
     while (true) {
-        cout << instruct;
+        cout << setColor(instruct, 15);
         cin >> timeInput;
 
         stringstream timeStream(timeInput);
@@ -737,7 +781,7 @@ void validateTime(const string& instruct, int& hour, int& minute) {
          * Referred from : https://stackoverflow.com/questions/20446373/cin-ignorenumeric-limitsstreamsizemax-n-max-not-recognize-it
          */
 
-            cout << "Invalid time format. Please enter time in HH:MM format(24 hour).\n";
+            cout << setColor("      Invalid time format. Please enter time in HH:MM format(24 hour).\n",12);
         }
     }
 }
@@ -745,8 +789,7 @@ void validateTime(const string& instruct, int& hour, int& minute) {
 int main() {
 
     int currentDay;
-
-    currentDay = validateInput(1, 31, "\nEnter the current day (1-31): ");
+    currentDay = validateInput(1, 31, setColor("\nEnter the current day (1-31): ",8),true);
 
 
     Scheduler scheduler(currentDay);
@@ -754,11 +797,11 @@ int main() {
     while (true) {
 
         scheduler.displayScheduler_print(currentDay);
-
-        int option = validateInput(1, 8, "\nChoose an option: ");
+        int option = validateInput(1, 8, setColor("\n   Choose an option: ",15));
 
         if (option == 8) {
-            cout << "You have exited the program.\n";
+            cout << setColor("You have exited the program.\n",12);
+            cout << setColor("", 8)<<endl;
             break;
         }
 
@@ -768,11 +811,11 @@ int main() {
 
             int startHour, startMinute, endHour, endMinute;
 
-            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
-            string title = validateString("Enter event title: ");
-            validateTime("Enter start time (HH:MM): ", startHour, startMinute);
-            validateTime("Enter end time (HH:MM): ", endHour, endMinute);
-            string repeatType = validateString("Enter repeat type (none, daily, weekly): ");
+            int date = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
+            string title = validateString("      Enter event title: ");
+            validateTime("      Enter start time (HH:MM): ", startHour, startMinute);
+            validateTime("      Enter end time (HH:MM): ", endHour, endMinute);
+            string repeatType = validateString("      Enter repeat type (none, daily, weekly): ");
 
 
             try {
@@ -782,17 +825,17 @@ int main() {
                 scheduler.scheduleEvent(date, event);
             }
             catch (const exception& exception) {
-                cout << "Error: " << exception.what() << endl;
+                cout << setColor("   Error: ",12) << exception.what() << endl;
             }
             break;
         }
         case 2: {
 
-            int date = validateInput(currentDay, 31, "Enter date (1-31): ");
-            string title = validateString("Enter event title: ");
+            int date = validateInput(currentDay, 31, "      Enter date (1-31): ");
+            string title = validateString("      Enter event title: ");
 
             if (scheduler.isEventRepeating(date, title)) {
-                bool deleteRepeats = validateOption("Delete all repeating events with the same title? (yes/no): ");
+                bool deleteRepeats = validateOption("      Delete all repeating events with the same title? (yes/no): ");
                 scheduler.cancelEvent(date, title, deleteRepeats);
             }
             else {
@@ -802,43 +845,43 @@ int main() {
         }
         case 3: {
 
-            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
-            string title = validateString("Enter event title: ");
-            int newDate = validateInput(currentDay, 31, "Enter new date (" + to_string(currentDay) + "-31): ");
+            int date = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
+            string title = validateString("      Enter event title: ");
+            int newDate = validateInput(currentDay, 31, "      Enter new date (" + to_string(currentDay) + "-31): ");
 
             scheduler.shiftEvent(date, title, newDate);
             break;
         }
         case 4: {
 
-            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+            int date = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
 
             scheduler.setDayOff(date);
             break;
         }
         case 5: {
 
-            int date = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+            int date = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
 
             try {
                 scheduler.viewDaySchedule(date);
 
             }
             catch (const exception& exception) {
-                cout << "Error: " << exception.what() << endl;
+                cout << setColor("   Error: ", 12) << exception.what() << endl;
             }
             break;
         }
 
         case 6: {
 
-            int startDate = validateInput(currentDay, 31, "Enter date (" + to_string(currentDay) + "-31): ");
+            int startDate = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
 
             try {
                 scheduler.viewWeekSchedule(startDate);
             }
             catch (const exception& exception) {
-                cout << "Error: " << exception.what() << endl;
+                cout << setColor("   Error: ", 12) << exception.what() << endl;
             }
             break;
         }
@@ -853,4 +896,5 @@ int main() {
     }
 
     return 0;
+    
 }
