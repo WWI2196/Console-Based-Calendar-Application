@@ -1,6 +1,6 @@
 #include "EventExceptions.h"
 
-EventExceptions::EventExceptions(int code) : Exceptions(code) {
+EventExceptions::EventExceptions(int code) : Exceptions(code) { // Constructor for the EventExceptions class
     switch (errorCode) {
     case 1:
         errorMessage = "Event overlaps with an existing event";

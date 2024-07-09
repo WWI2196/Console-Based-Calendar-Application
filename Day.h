@@ -6,7 +6,7 @@
 
 using namespace std;
 
-class Day {
+class Day { // Class for the Days
 private:
     void sortEvents();
 
@@ -17,7 +17,7 @@ public:
     int eventCount;
     string dayOfWeek;
 
-    Day(int date = 0, string dayOfWeek = "");
+    Day(int date = 0, string dayOfWeek = ""); // 
 
     void addEvent(Event& event);
     void deleteEvent(string& title);

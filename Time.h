@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class Time {
+class Time { // Class for the Time 
 private:
     int hour;
     int minute;

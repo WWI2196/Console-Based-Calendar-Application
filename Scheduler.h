@@ -31,3 +31,5 @@ public:
     bool isEventRepeating(int date, const string& title) const;
     void displayScheduler_print(int today);
 };
+
+string setColor(const string& txt, const int& color);

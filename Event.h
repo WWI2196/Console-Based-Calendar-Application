@@ -6,7 +6,7 @@
 
 using namespace std;
 
-class Event {
+class Event { // Class for the Events
 public:
     string title;
     Time startTime;

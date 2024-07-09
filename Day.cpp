@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void Day::sortEvents() {
+void Day::sortEvents() { // Bubble sort of the events in the day according to the start time
     for (int i = 0; i < eventCount - 1; ++i) {
         for (int j = 0; j < eventCount - i - 1; ++j) {
             if (events[j].startTime.isLargerComparedTo(events[j + 1].startTime)) {
@@ -29,7 +29,7 @@ Day::Day(int date, string dayOfWeek) {
     this->eventCount = 0;
 }
 
-void Day::addEvent(Event& event) {
+void Day::addEvent(Event& event) { // Add an event to the day
     if (isDayOff) {
         throw DayExceptions(1);
     }
@@ -45,7 +45,8 @@ void Day::addEvent(Event& event) {
     sortEvents();
 }
 
-void Day::deleteEvent(string& title) {
+
+void Day::deleteEvent(string& title) { // Delete an event from the day
     bool eventFound = false;
     for (int i = 0; i < eventCount; ++i) {
         if (events[i].title == title) {
@@ -62,21 +63,22 @@ void Day::deleteEvent(string& title) {
     }
 }
 
-void Day::shiftEvent(string& title, int newDate, Day* days) {
+void Day::shiftEvent(string& title, int newDate, Day* days) { // Shift an event to another day
     bool eventFound = false;
+
     for (int i = 0; i < eventCount; ++i) {
         if (events[i].title == title) {
             Event eventToShift = events[i];
-            // Check for conflicts in the new date
+            
             for (int j = 0; j < days[newDate - 1].eventCount; ++j) {
-                if (eventToShift.overlaps(days[newDate - 1].events[j])) {
+                if (eventToShift.overlaps(days[newDate - 1].events[j])) { // Check if the event overlaps with any other events on the new date
                     throw EventExceptions(7);
                 }
             }
-            // Remove the event from the current date
-            deleteEvent(title);
-            // Add the event to the new date
-            days[newDate - 1].addEvent(eventToShift);
+           
+            deleteEvent(title);  // Remove the event from the current date
+            
+            days[newDate - 1].addEvent(eventToShift);// Add the event to the new date
             eventFound = true;
             break;
         }
@@ -85,15 +87,15 @@ void Day::shiftEvent(string& title, int newDate, Day* days) {
         throw EventExceptions(3);
     }
 }
-void Day::clearEvents() {
+void Day::clearEvents() { // Clear all events from the day
     eventCount = 0;
 }
 
-string Day::toString() const {
+string Day::toString() const { // Convert the day data to a string
     if (eventCount == 0 && !isDayOff) return "";
 
     stringstream EventStream;
-    EventStream << "\n" << date << " July 2024 (" << dayOfWeek << ")";
+    EventStream << "\n      " << date << " July 2024 (" << dayOfWeek << ")";
 
     if (isDayOff) {
         EventStream << " (Day Off)";
@@ -104,43 +106,45 @@ string Day::toString() const {
         EventStream << "  " << events[i].toString() << "\n";
     }
 
-    return EventStream.str();
+    return EventStream.str(); // pass stringstream as string from the function
 
 }
 
-bool Day::toString_print() const {
+bool Day::toString_print() const { 
     if (isDayOff) return true;
     else return false;
 }
 
-string Day::formatDayDataToString() const {
+string Day::formatDayDataToString() const { 
     string dayString;
     if (isDayOff) {
-        dayString = dayString + to_string(date) + "|off|\n";
+        dayString = dayString + to_string(date) + "|off|\n"; // If the day is off, only the date and "off" are stored
     }
-    for (int i = 0; i < eventCount; ++i) {
+    for (int i = 0; i < eventCount; ++i) { // If the day is not off, the date and all the events are stored
         dayString = dayString + to_string(date) + "|" + events[i].formatEventDataToString() + "\n";
     }
-    return dayString;
+    return dayString; 
 }
 
 void Day::extractDayData(string& dayStr) {
     stringstream dayStream(dayStr);
     string line;
-    while (getline(dayStream, line)) {
-        if (line.empty()) {
+    while (getline(dayStream, line)) {  // Extract the day data from the string
+        if (line.empty()) { // If the line is empty, continue to the next line
             continue;
         }
-        stringstream lineStream(line);
+        stringstream lineStream(line); 
         string data;
-        getline(lineStream, data, '|');
+
+        getline(lineStream, data, '|'); // Extract the date 
         date = stoi(data);
-        getline(lineStream, data, '|');
-        if (data == "off") {
+
+        getline(lineStream, data, '|'); // Extract the day off status
+        if (data == "off") { // If the day is off, set the day off status to true
             isDayOff = true;
             clearEvents();
         }
-        else {
+        else { // If the day is not off, extract the event data
             Event event;
             event.extractEventData(line.substr(line.find('|') + 1));
             isDayOff = false;

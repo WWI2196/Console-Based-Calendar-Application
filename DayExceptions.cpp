@@ -1,6 +1,6 @@
 #include "DayExceptions.h"
 
-DayExceptions::DayExceptions(int code) : Exceptions(code) {
+DayExceptions::DayExceptions(int code) : Exceptions(code) { // Constructor for the DayExceptions class
     switch (errorCode) {
     case 1:
         errorMessage = "Cannot schedule events on a day off";

@@ -8,7 +8,8 @@
 21|SBS|09:10|13:15|weekly
 21|QQT|13:45|14:50|weekly
 22|IIT|08:30|10:30|weekly
+22|CJI|10:45|12:45|none
 24|SBS|09:10|13:15|weekly
-28|QQT|13:45|14:50|weekly
+28|YT|10:30|12:30|none
 29|IIT|08:30|10:30|weekly
 31|SBS|09:10|13:15|weekly

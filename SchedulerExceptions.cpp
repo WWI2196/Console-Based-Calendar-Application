@@ -1,6 +1,6 @@
 #include "SchedulerExceptions.h"
 
-SchedulerExceptions::SchedulerExceptions(int code) : Exceptions(code) {
+SchedulerExceptions::SchedulerExceptions(int code) : Exceptions(code) { // Constructor for the SchedulerExceptions class
 	switch (errorCode) {
 	case 1:
 		errorMessage = "Invalid input. Please enter a valid date.";
