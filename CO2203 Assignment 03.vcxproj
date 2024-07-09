@@ -127,7 +127,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CO2203 Assignment 03.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Day.cpp" />
+    <ClCompile Include="DayExceptions.cpp" />
+    <ClCompile Include="Event.cpp" />
+    <ClCompile Include="EventExceptions.cpp" />
+    <ClCompile Include="Exceptions.cpp" />
+    <ClCompile Include="Scheduler.cpp" />
+    <ClCompile Include="SchedulerExceptions.cpp" />
+    <ClCompile Include="Time.cpp" />
+    <ClCompile Include="TimeExceptions.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Day.h" />
+    <ClInclude Include="DayExceptions.h" />
+    <ClInclude Include="Event.h" />
+    <ClInclude Include="EventExceptions.h" />
+    <ClInclude Include="Exceptions.h" />
+    <ClInclude Include="Scheduler.h" />
+    <ClInclude Include="SchedulerExceptions.h" />
+    <ClInclude Include="Time.h" />
+    <ClInclude Include="TimeExceptions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
