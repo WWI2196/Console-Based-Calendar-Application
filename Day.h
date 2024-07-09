@@ -8,16 +8,16 @@ using namespace std;
 
 class Day { // Class for the Days
 private:
-    void sortEvents();
+    void sortEvents(); // function to sort the events
 
 public:
     int date;
     bool isDayOff;
-    Event events[10];
+    Event events[10]; // maximum of 10 events per day
     int eventCount;
     string dayOfWeek;
 
-    Day(int date = 0, string dayOfWeek = ""); // 
+    Day(int date = 0, string dayOfWeek = ""); 
 
     void addEvent(Event& event);
     void deleteEvent(string& title);

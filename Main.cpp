@@ -46,7 +46,7 @@ int validateInput(int startValue, int endValue, const string& instruct) { // Val
         else {
             cin.clear(); // Clear the error flag
             cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-            cout << setColor("   Invalid input. Please enter a valid number between ", 12) << setColor(to_string(startValue), 12) << setColor(" and ", 12) << setColor(to_string(endValue), 12) << ".\n";
+            cout << setColor("    Invalid input. Please enter a valid number between ", 12) << setColor(to_string(startValue), 12) << setColor(" and ", 12) << setColor(to_string(endValue), 12) << ".\n";
         }
     }
     return input;
@@ -61,7 +61,7 @@ string validateString(const string& instruct) { // Validate the input for the st
         getline(cin, input);
 
         if (input.empty()) {
-            cout << setColor("      You can not keep the title empty. Please enter a name.", 12) << endl;
+            cout << setColor("   You can not keep the title empty. Please enter a title.", 12) << endl;
         }
         else {
             break;
@@ -96,7 +96,7 @@ void validateTime(const string& instruct, int& hour, int& minute) { // Validate 
         cin >> timeInput;
 
         stringstream timeStream(timeInput);
-        if (timeStream >> hour >> colon >> minute && (hour >= 0 && hour < 24) && (minute >= 0 && minute < 60)) {
+        if (timeStream >> hour >> colon >> minute && (hour >= 0 && hour < 24) && (minute >= 0 && minute < 60)) { // 
             break;
         }
         else {
@@ -108,7 +108,7 @@ void validateTime(const string& instruct, int& hour, int& minute) { // Validate 
          * Referred from : https://stackoverflow.com/questions/20446373/cin-ignorenumeric-limitsstreamsizemax-n-max-not-recognize-it
          */
 
-            cout << setColor("      Invalid time format. Please enter time in HH:MM format(24 hour).\n", 12);
+            cout << setColor("    Invalid time format. Please enter time in HH:MM format(24 hour).\n", 12);
         }
     }
 }
@@ -134,7 +134,7 @@ int main() {
 
 
         switch (option) {
-        case 1: {
+        case 1: { // Schedule event
 
             int startHour, startMinute, endHour, endMinute;
 
@@ -156,12 +156,12 @@ int main() {
             }
             break;
         }
-        case 2: {
+        case 2: { // Cancel event
 
             int date = validateInput(currentDay, 31, "      Enter date (1-31): ");
             string title = validateString("      Enter event title: ");
 
-            if (scheduler.isEventRepeating(date, title)) {
+            if (scheduler.isEventRepeating(date, title)) { // Check if the event is repeating
                 bool deleteRepeats = validateOption("\nThis is a repeating event.\nDelete all repeating events with the same title? (yes/no): ");
                 scheduler.cancelEvent(date, title, deleteRepeats);
             }
@@ -170,7 +170,7 @@ int main() {
             }
             break;
         }
-        case 3: {
+        case 3: { // Shift event
 
             int date = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
             string title = validateString("      Enter event title: ");
@@ -186,7 +186,7 @@ int main() {
             scheduler.setDayOff(date);
             break;
         }
-        case 5: {
+        case 5: { //  View day schedule
 
             int date = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
 
@@ -200,7 +200,7 @@ int main() {
             break;
         }
 
-        case 6: {
+        case 6: { // View week schedule
 
             int startDate = validateInput(currentDay, 31, "      Enter date (" + to_string(currentDay) + "-31): ");
 
@@ -212,7 +212,7 @@ int main() {
             }
             break;
         }
-        case 7: {
+        case 7: { // View month schedule
 
             scheduler.displayScheduler();
             break;
