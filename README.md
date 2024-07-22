@@ -1,4 +1,4 @@
-# Console-Based Calendar Application
+# Console-Based Calendar Application(CO2203)
 
 ## Description
 Develop a console-based calendar application for July 2024. The application allows scheduling events/meetings, marking days off, and managing events with various functionalities.
